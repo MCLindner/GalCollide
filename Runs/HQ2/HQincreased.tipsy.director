@@ -1,0 +1,17 @@
+size 1000 1000 
+clip 0.001 500 
+render tsc 
+target 0 0 0 
+physical 
+file HQincreased.tipsy 
+project perspective 
+softdark 0.2 
+logscale 100000000000 10000000000000000 
+coldark 0.2 0.2 5 1e-17 
+dDumpFrameStep = 25 
+iDirector = 1 
+gas off 
+star off
+FOV 90 
+up 0 1 0 
+eye 0. 0. 45.0 
