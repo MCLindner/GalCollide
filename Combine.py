@@ -13,7 +13,24 @@ class GalCombine:
     Gal1, PyNBody TipsySnap
     Gal2, PyNbody TipsySnap
     d_perigalactic = perigalactic distance given in kpc
+    initial_separation = initial separation distance between galaxies in kpc
+    eccentriciy = eccentricity of the system
     writename = output file name (string)
+    Omega1, w1, i1 = Euler angles for galaxy 1
+    Omega2, w2, i2 = Euler angles for galaxy 2
+    transform = Bool, whether or not to transform each galaxy by Euler angles
+
+    Public methods:
+    combine(): Generates the initial condition tipsy file
+
+    get_period() Gets the period of the orbit of the system
+
+    make_param_file() creates the param file for changa
+
+    make_director_file() creates the director file for changa movie output
+
+    solve_ivp(): tests that the initial condition is
+     correct by solving the two body problem.
     """
 
     def __init__(self, Gal1, Gal2,
@@ -38,7 +55,7 @@ class GalCombine:
         self.Mass2 = float(self.Gal2['mass'].sum().in_units('kg')) * u.kg
         self.MassTot = self.Mass1 + self.Mass2
 
-    def get_vxvy(self, which_gal):
+    def _get_vxvy(self, which_gal):
         """Finds the velocity componants in cartesian that, given the
         parameters passed into the class, would result
         in a Keplerian two-body orbit."""
@@ -56,7 +73,6 @@ class GalCombine:
         n = k * a**(-3 / 2)
 
         # Gal1 ###############################################################
-
         # Find E1
         def f1(E1):
             return ((np.sqrt((a * (np.cos(E1) - e))**2 + (b * np.sin(E1))**2) - r))
@@ -74,9 +90,6 @@ class GalCombine:
         vY1 = (b * n * np.cos(E1)) / (1 - e * np.cos(E1))
 
         # Transition from position in orbital plane to position in space
-        # [x;y;z] = P[X;Y;Z]
-        # P = I in this case as all Euler angles are 0
-        # r and r dot... go to rho
         q1 = -1
         x1 = q1 * X1
         y1 = q1 * Y1
@@ -93,7 +106,6 @@ class GalCombine:
         print("Done")
 
         # Find positions
-        # e sign
         X2 = a * (np.cos(E2) - e)
         Y2 = b * np.sin(E2)
 
@@ -102,16 +114,13 @@ class GalCombine:
         vY2 = (b * n * np.cos(E2)) / (1 - e * np.cos(E2))
 
         # Transition from position in orbital plane to position in space
-        # [x;y;z] = P[X;Y;Z]
-        # P = -I in this case as the Omega Euler angle is pi
         q2 = 1
         x2 = q2 * X2
         y2 = q2 * Y2
         vx2 = q2 * vX2
         vy2 = q2 * vY2
 
-        # COM ################################################################
-
+        # Check that the center of mass is as it should be
         self.xcom = (x1 * self.Mass1 + x2 * self.Mass2) / self.MassTot
         self.ycom = (y1 * self.Mass1 + y2 * self.Mass2) / self.MassTot
         print('xcom = ' + str(self.xcom))
@@ -129,19 +138,19 @@ class GalCombine:
         print('T:' + str(T.decompose()))
         return T
 
-    def initial_conds(self, which_gal):
+    def _initial_conds(self, which_gal):
         """Returns the initial positions and velocities for galaxy given
          by which_gal. Utility function."""
-        x, y, vx, vy = self.get_vxvy(which_gal)
+        x, y, vx, vy = self._get_vxvy(which_gal)
         print(str(which_gal) + ': x,y,vx,vy = ' + str((x, y, vx.decompose(), vy.decompose())))
         return x[0], y[0], vx[0], vy[0]
 
-    def equations(self, t, p):
+    def _equations(self, t, p):
         """Splits second order diff eqquations of motion into four
          first order differential equations."""
-
         r = np.sqrt((p[0])**2 + (p[1])**2)
 
+        # Split the diff EQs
         #         u1 = x
         #         u2 = y
         #         u3 = dx
@@ -154,19 +163,20 @@ class GalCombine:
         return [du1, du2, du3, du4]
 
     def solve_ivp(self, which_gal):
-        """Test IC by solving eq for galaxies as if they were point sources."""
+        """Test that the initial condition is correct by
+         solving the two-body problem for the system."""
         nsteps = 10000
         period = self.get_period().to(u.s).value
         t_eval = np.linspace(0, period, nsteps)
 
         if which_gal == self.Gal1:
-            x1, y1, vx1, vy1 = self.initial_conds(self.Gal1)
-            sol = solve_ivp(self.equations, [0, period],
+            x1, y1, vx1, vy1 = self._initial_conds(self.Gal1)
+            sol = solve_ivp(self._equations, [0, period],
                             [x1.to(u.m).value, y1.to(u.m).value, vx1.to(u.m/u.s).value, vy1.to(u.m/u.s).value],
                             t_eval=t_eval, rtol=1e-6)
         elif which_gal == self.Gal2:
-            x2, y2, vx2, vy2 = self.initial_conds(self.Gal2)
-            sol = solve_ivp(self.equations, [0, period],
+            x2, y2, vx2, vy2 = self._initial_conds(self.Gal2)
+            sol = solve_ivp(self._equations, [0, period],
                             [x2.to(u.m).value, y2.to(u.m).value, vx2.to(u.m/u.s).value, vy2.to(u.m/u.s).value],
                             t_eval=t_eval, rtol=1e-6)
         return sol
@@ -176,8 +186,8 @@ class GalCombine:
          Massunit = 2.2222858e5 Msol. Length unit = 1 kpc."""
         # these x y z refer to initial condit to be added
         print("Getting initial conditions")
-        x1, y1, vx1, vy1 = self.initial_conds(which_gal=self.Gal1)
-        x2, y2, vx2, vy2 = self.initial_conds(which_gal=self.Gal2)
+        x1, y1, vx1, vy1 = self._initial_conds(which_gal=self.Gal1)
+        x2, y2, vx2, vy2 = self._initial_conds(which_gal=self.Gal2)
 
         x1 = ((x1).to(u.kpc)).value * (self.Mass1 / self.MassTot)
         y1 = ((y1).to(u.kpc)).value * (self.Mass1 / self.MassTot)
@@ -313,8 +323,8 @@ class GalCombine:
         file.close()
 
     def make_director_file(self):
-        """Creates a param file for use in ChaNGa. Sets nSteps to
-         integrate over one orbital period."""
+        """Creates director file for ChaNGa movie output.
+         Should set camera to keep entire system in view."""
         file = open(self.writename + ".director", "w")
         a = -self.d_perigalactic / (self.eccentricity - 1)
         y = 0.5 * a.value + 20
