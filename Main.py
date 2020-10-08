@@ -6,6 +6,7 @@ from Combine import GalCombine
 
 Gal1 = p.Gal1
 Gal2 = p.Gal2
+dDelta = p.dDelta
 d_perigalactic = p.d_perigalactic
 inital_separation = p.initial_separation
 eccentricity = p.eccentricity
@@ -18,7 +19,7 @@ w2 = p.w2
 i2 = p.i2
 transform = p.transform
 
-two_bodys = GalCombine(Gal1, Gal2,
+two_bodys = GalCombine(Gal1, Gal2, dDelta,
                        d_perigalactic, inital_separation, eccentricity,
                        writename, Omega1, w1, i1, Omega2, w2, i2,
                        transform)
@@ -27,9 +28,9 @@ two_bodys.make_param_file()
 two_bodys.make_director_file()
 combined = two_bodys.combine()
 
-sph.velocity_image(combined, vector_color="black", qty="rho",
-                   width=5000, cmap="Blues", denoise=False,
-                   approximate_fast=False, show_cbar=False)
+# sph.velocity_image(combined, vector_color="black", qty="rho",
+#                    width=5000, cmap="Blues", denoise=False,
+#                    approximate_fast=False, show_cbar=False)
 
 # test1 = two_bodys.solve_ivp(Gal1)
 # test2 = two_bodys.solve_ivp(Gal2)

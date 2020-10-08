@@ -4,24 +4,27 @@ import pynbody
 Gal1 = pynbody.load('./InitialConditions/initMW')
 Gal2 = pynbody.load('./InitialConditions/initMW2')
 
+# dDelta for changa param file
+dDelta = .01
+
 # Perigalactic distance in kpc
-d_perigalactic = 23
+d_perigalactic = 14.8
 
 # Initial separation distance in kpc
-initial_separation = 276
+initial_separation = 10**2
 
 # Eccentricity of system
-eccentricity = 0.6
+eccentricity = 0.999
 
 # Output file name
-writename = "testing.tipsy"
+writename = "TheMice.tipsy"
 
 # Euler angles to transform each galaxy by
-Omega1, w1, i1 = 0, 4.71239, 0.261799
-Omega2, w2, i2 = 0, 4.71239, 1.0472
+Omega1, w1, i1 = 0, 4.10152, 0.261799
+Omega2, w2, i2 = 0, 3.49066, 0.436332
 
 # Viewing angle relative to orbital plane
-thetaX, thetaY, thetaZ = 0, 0, 0
+thetaX, thetaY, thetaZ = 78, -44, -130
 
 # Transform galaxies by Euler angles
 transform = True

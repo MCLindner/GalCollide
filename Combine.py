@@ -12,6 +12,7 @@ class GalCombine:
     Attributes:
     Gal1, PyNBody TipsySnap
     Gal2, PyNbody TipsySnap
+    dDelta = dDelta for changa param file
     d_perigalactic = perigalactic distance given in kpc
     initial_separation = initial separation distance between galaxies in kpc
     eccentriciy = eccentricity of the system
@@ -33,11 +34,12 @@ class GalCombine:
      correct by solving the two body problem.
     """
 
-    def __init__(self, Gal1, Gal2,
+    def __init__(self, Gal1, Gal2, dDelta,
                  d_perigalactic, inital_separation, eccentricity,
                  writename, Omega1, w1, i1, Omega2, w2, i2, transform):
         self.Gal1 = Gal1
         self.Gal2 = Gal2
+        self.dDelta = dDelta
         self.d_perigalactic = d_perigalactic * u.kpc
         self.eccentricity = eccentricity
         self.inital_separation = inital_separation * u.kpc
@@ -99,7 +101,7 @@ class GalCombine:
         # Gal2 ###############################################################
         # Find E2
         def f2(E2):
-            return (np.sqrt((a * (np.cos(E2) - e))**2 + (b * np.sin(E2))**2) - r)
+            return ((np.sqrt((a * (np.cos(E2) - e))**2 + (b * np.sin(E2))**2) - r))
         print("Finding E2")
         E2 = fsolve(f2, x0=0, xtol=10e-6)
         print(E2)
@@ -172,12 +174,14 @@ class GalCombine:
         if which_gal == self.Gal1:
             x1, y1, vx1, vy1 = self._initial_conds(self.Gal1)
             sol = solve_ivp(self._equations, [0, period],
-                            [x1.to(u.m).value, y1.to(u.m).value, vx1.to(u.m/u.s).value, vy1.to(u.m/u.s).value],
+                            [x1.to(u.m).value, y1.to(u.m).value,
+                             vx1.to(u.m / u.s).value, vy1.to(u.m / u.s).value],
                             t_eval=t_eval, rtol=1e-6)
         elif which_gal == self.Gal2:
             x2, y2, vx2, vy2 = self._initial_conds(self.Gal2)
             sol = solve_ivp(self._equations, [0, period],
-                            [x2.to(u.m).value, y2.to(u.m).value, vx2.to(u.m/u.s).value, vy2.to(u.m/u.s).value],
+                            [x2.to(u.m).value, y2.to(u.m).value,
+                             vx2.to(u.m / u.s).value, vy2.to(u.m / u.s).value],
                             t_eval=t_eval, rtol=1e-6)
         return sol
 
@@ -194,10 +198,10 @@ class GalCombine:
         x2 = ((x2).to(u.kpc)).value * (self.Mass2 / self.MassTot)
         y2 = ((y2).to(u.kpc)).value * (self.Mass2 / self.MassTot)
 
-        vx1 = ((vx1).to(.9778 * u.km/u.s)).value * (self.Mass1 / self.MassTot)
-        vy1 = ((vy1).to(.9778 * u.km/u.s)).value * (self.Mass1 / self.MassTot)
-        vx2 = ((vx2).to(.9778 * u.km/u.s)).value * (self.Mass2 / self.MassTot)
-        vy2 = ((vy2).to(.9778 * u.km/u.s)).value * (self.Mass2 / self.MassTot)
+        vx1 = ((vx1).to(.9778 * u.km / u.s)).value * (self.Mass1 / self.MassTot)
+        vy1 = ((vy1).to(.9778 * u.km / u.s)).value * (self.Mass1 / self.MassTot)
+        vx2 = ((vx2).to(.9778 * u.km / u.s)).value * (self.Mass2 / self.MassTot)
+        vy2 = ((vy2).to(.9778 * u.km / u.s)).value * (self.Mass2 / self.MassTot)
         print("Done")
 
         lengths = {}
@@ -235,7 +239,9 @@ class GalCombine:
             gal1_shifted[fam][:len(s1)]['eps'] = s1['eps'].in_units('kpc')
             print("Done")
 
-        gal1_shifted.write(filename='temp1.tipsy', fmt=pynbody.tipsy.TipsySnap, cosmological=False)
+        gal1_shifted.write(filename='temp1.tipsy',
+                           fmt=pynbody.tipsy.TipsySnap,
+                           cosmological=False)
 
         lengths = {}
         for fam in self.Gal2.families():
@@ -272,7 +278,9 @@ class GalCombine:
             gal2_shifted[fam][:len(s2)]['eps'] = s2['eps'].in_units('kpc')
             print("Done")
 
-        gal2_shifted.write(filename='temp2.tipsy', fmt=pynbody.tipsy.TipsySnap, cosmological=False)
+        gal2_shifted.write(filename='temp2.tipsy',
+                           fmt=pynbody.tipsy.TipsySnap,
+                           cosmological=False)
 
         print("Combining galaxies")
         for fam in gal1_shifted.families():
@@ -287,7 +295,9 @@ class GalCombine:
                 combined[fam][:len(s1)][arname] = s1[arname]
                 combined[fam][len(s1):][arname] = s2[arname]
 
-        combined.write(filename=self.writename, fmt=pynbody.tipsy.TipsySnap, cosmological=False)
+        combined.write(filename=self.writename,
+                       fmt=pynbody.tipsy.TipsySnap,
+                       cosmological=False)
         print("Done")
         return combined
 
@@ -296,11 +306,8 @@ class GalCombine:
          Sets nSteps to integrate over one orbital period."""
         p = self.get_period()
 
-        dDelta = 0.01
-
         gyears = p.to(1e9 * u.year)
-        print(gyears)
-        steps = gyears / dDelta
+        steps = gyears / self.dDelta
 
         achInFile = self.writename
 
@@ -309,7 +316,7 @@ class GalCombine:
         L = ["nSteps = " + str(int(steps.value)) + "\n",
              "dTheta = 0.7 \n",
              "dEta = .03 \n",
-             "dDelta = " + str(dDelta) + " \n",
+             "dDelta = " + str(self.dDelta) + " \n",
              "iOutInterval = 500 \n",
              "achInFile = " + achInFile + " \n",
              "achOutName = " + self.writename + " \n",
