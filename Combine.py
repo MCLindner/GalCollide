@@ -333,8 +333,7 @@ class GalCombine:
         """Creates director file for ChaNGa movie output.
          Should set camera to keep entire system in view."""
         file = open(self.writename + ".director", "w")
-        a = -self.d_perigalactic / (self.eccentricity - 1)
-        y = 0.5 * a.value + 20
+        y = 0.5 * self.inital_separation.value + 20
         L = ["size 1000 1000 \n",
              "clip 0.001 500 \n",
              "render tsc \n",
