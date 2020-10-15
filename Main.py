@@ -32,29 +32,30 @@ combined = two_bodys.combine()
 #                    width=5000, cmap="Blues", denoise=False,
 #                    approximate_fast=False, show_cbar=False)
 
-# test1 = two_bodys.solve_ivp(Gal1)
-# test2 = two_bodys.solve_ivp(Gal2)
+test1 = two_bodys.solve_ivp(Gal1)
+test2 = two_bodys.solve_ivp(Gal2)
 
-# Mass1 = float(Gal1['mass'].sum().in_units('kg')) * u.kg
-# Mass2 = float(Gal2['mass'].sum().in_units('kg')) * u.kg
-# MassTot = Mass1 + Mass2
+Mass1 = float(Gal1['mass'].sum().in_units('kg')) * u.kg
+Mass2 = float(Gal2['mass'].sum().in_units('kg')) * u.kg
+MassTot = Mass1 + Mass2
 
 
-# x1 = (test1['y'][0] * u.m).to(u.kpc).value * Mass1 / MassTot
-# x2 = (test2['y'][0] * u.m).to(u.kpc).value * Mass2 / MassTot
-# y1 = (test1['y'][1] * u.m).to(u.kpc).value * Mass1 / MassTot
-# y2 = (test2['y'][1] * u.m).to(u.kpc).value * Mass2 / MassTot
+x1 = (test1['y'][0] * u.m).to(u.kpc).value * Mass1 / MassTot
+x2 = (test2['y'][0] * u.m).to(u.kpc).value * Mass2 / MassTot
+y1 = (test1['y'][1] * u.m).to(u.kpc).value * Mass1 / MassTot
+y2 = (test2['y'][1] * u.m).to(u.kpc).value * Mass2 / MassTot
 
-# fig, ax = plt.subplots(2)
-# ax[0].plot(test1['t'], y1)
-# ax[1].plot(test2['t'], y2)
-# ax[0].set_ylabel('y')
-# ax[0].set_xlabel('t')
+fig, ax = plt.subplots(2)
+ax[0].plot(test1['t'], y1)
+ax[1].plot(test2['t'], y2)
+ax[0].set_ylabel('y')
+ax[0].set_xlabel('t')
 
-# fig, ax = plt.subplots(figsize=(15, 15))
+fig, ax = plt.subplots(figsize=(15, 15))
 
-# ax.set_ylim(-50, 50)
-# ax.set_xlim(-50, 50)
+ax.set_ylim(-50, 50)
+ax.set_xlim(-50, 50)
 
-# ax.scatter(x1, y1, c='b')
-# ax.scatter(x2, y2, c='r')
+ax.scatter(x1, y1, c='b')
+ax.scatter(x2, y2, c='r')
+plt.show()

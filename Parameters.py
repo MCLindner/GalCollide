@@ -14,7 +14,7 @@ d_perigalactic = 14.8
 initial_separation = 10**2
 
 # Eccentricity of system
-eccentricity = 0.999
+eccentricity = 0.99
 
 # Output file name
 writename = "TheMice.tipsy"
