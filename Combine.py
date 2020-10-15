@@ -1,7 +1,7 @@
 import pynbody
 import numpy as np
 from scipy.integrate import solve_ivp
-from scipy.optimize import fsolve
+from scipy.optimize import brentq
 import astropy.units as u
 import astropy.constants as const
 
@@ -15,7 +15,7 @@ class GalCombine:
     dDelta = dDelta for changa param file
     d_perigalactic = perigalactic distance given in kpc
     initial_separation = initial separation distance between galaxies in kpc
-    eccentriciy = eccentricity of the system
+    eccentricity = eccentricity of the system
     writename = output file name (string)
     Omega1, w1, i1 = Euler angles for galaxy 1
     Omega2, w2, i2 = Euler angles for galaxy 2
@@ -52,6 +52,9 @@ class GalCombine:
         self.i2 = i2
         self.transform = transform
 
+        self.semi_major_axis = (-d_perigalactic / (eccentricity - 1)) * u.kpc
+        self.semi_minor_axis = (-d_perigalactic / (eccentricity - 1)) * np.sqrt(1 - eccentricity**2) * u.kpc
+
         self.G = const.G
         self.Mass1 = float(self.Gal1['mass'].sum().in_units('kg')) * u.kg
         self.Mass2 = float(self.Gal2['mass'].sum().in_units('kg')) * u.kg
@@ -61,35 +64,49 @@ class GalCombine:
         """Finds the velocity componants in cartesian that, given the
         parameters passed into the class, would result
         in a Keplerian two-body orbit."""
+
         # Constants
         k = np.sqrt(self.G * self.MassTot)
 
-        # Given parameters
-        e = self.eccentricity
-        rp = self.d_perigalactic
-        r = self.inital_separation
-
         # Derived parameters
-        a = -rp / (e - 1)
-        b = a * np.sqrt(1 - e**2)
-        n = k * a**(-3 / 2)
+        n = k * self.semi_major_axis**(-3 / 2)
 
-        # Gal1 ###############################################################
         # Find E1
-        def f1(E1):
-            return ((np.sqrt((a * (np.cos(E1) - e))**2 + (b * np.sin(E1))**2) - r))
+        def f(E1, a, b, e, r):
+            return ((np.sqrt((a * (np.cos(E1) - e))**2 + (b * np.sin(E1))**2) - r)).value
+
         print("Finding E1")
-        E1 = fsolve(f1, x0=0, xtol=10e-6)
+        E1 = brentq(f, 0, np.pi, xtol=10e-6,
+                    args=(
+                        -1*self.d_perigalactic / (self.eccentricity - 1),
+                        self.semi_major_axis * np.sqrt(1 - self.eccentricity**2),
+                        self.eccentricity,
+                        self.inital_separation)
+                    )
         print(E1)
         print("Done")
 
+        # Find E2
+        print("Finding E2")
+        E2 = brentq(f, 0, np.pi, xtol=10e-6,
+                    args=(
+                        -self.d_perigalactic / (self.eccentricity - 1),
+                        self.semi_major_axis * np.sqrt(1 - self.eccentricity**2),
+                        self.eccentricity,
+                        self.inital_separation)
+                    )
+        print(E2)
+        print("Done")
+
+        # Gal1 ###############################################################
+
         # Find positions
-        X1 = a * (np.cos(E1) - e)
-        Y1 = b * np.sin(E1)
+        X1 = self.semi_major_axis * (np.cos(E1) - self.eccentricity)
+        Y1 = self.semi_minor_axis * np.sin(E1)
 
         # Find velocity componants
-        vX1 = (-a * n * np.sin(E1)) / (1 - e * np.cos(E1))
-        vY1 = (b * n * np.cos(E1)) / (1 - e * np.cos(E1))
+        vX1 = (-self.semi_major_axis * n * np.sin(E1)) / (1 - self.eccentricity * np.cos(E1))
+        vY1 = (self.semi_minor_axis * n * np.cos(E1)) / (1 - self.eccentricity * np.cos(E1))
 
         # Transition from position in orbital plane to position in space
         q1 = -1
@@ -99,21 +116,14 @@ class GalCombine:
         vy1 = q1 * vY1
 
         # Gal2 ###############################################################
-        # Find E2
-        def f2(E2):
-            return ((np.sqrt((a * (np.cos(E2) - e))**2 + (b * np.sin(E2))**2) - r))
-        print("Finding E2")
-        E2 = fsolve(f2, x0=0, xtol=10e-6)
-        print(E2)
-        print("Done")
 
         # Find positions
-        X2 = a * (np.cos(E2) - e)
-        Y2 = b * np.sin(E2)
+        X2 = self.semi_major_axis * (np.cos(E2) - self.eccentricity)
+        Y2 = self.semi_minor_axis * np.sin(E2)
 
         # Find velocity componants
-        vX2 = (-a * n * np.sin(E2)) / (1 - e * np.cos(E2))
-        vY2 = (b * n * np.cos(E2)) / (1 - e * np.cos(E2))
+        vX2 = (-self.semi_major_axis * n * np.sin(E2)) / (1 - self.eccentricity * np.cos(E2))
+        vY2 = (self.semi_minor_axis * n * np.cos(E2)) / (1 - self.eccentricity * np.cos(E2))
 
         # Transition from position in orbital plane to position in space
         q2 = 1
@@ -135,7 +145,7 @@ class GalCombine:
     def get_period(self):
         """Returns the period of orbit in seconds based on Kepler's laws."""
         k = np.sqrt(self.G * self.MassTot)
-        a = -self.d_perigalactic / (self.eccentricity - 1)
+        a = self.semi_major_axis
         T = np.sqrt(((4 * np.pi**2) / (k**2)) * a**3)
         print('T:' + str(T.decompose()))
         return T
@@ -145,7 +155,7 @@ class GalCombine:
          by which_gal. Utility function."""
         x, y, vx, vy = self._get_vxvy(which_gal)
         print(str(which_gal) + ': x,y,vx,vy = ' + str((x, y, vx.decompose(), vy.decompose())))
-        return x[0], y[0], vx[0], vy[0]
+        return x, y, vx, vy
 
     def _equations(self, t, p):
         """Splits second order diff eqquations of motion into four
