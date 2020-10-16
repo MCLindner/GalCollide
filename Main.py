@@ -1,4 +1,3 @@
-import pynbody.plot.sph as sph
 import matplotlib.pylab as plt
 import astropy.units as u
 import Parameters as p
@@ -28,10 +27,6 @@ two_bodys.make_param_file()
 two_bodys.make_director_file()
 combined = two_bodys.combine()
 
-# sph.velocity_image(combined, vector_color="black", qty="rho",
-#                    width=5000, cmap="Blues", denoise=False,
-#                    approximate_fast=False, show_cbar=False)
-
 test1 = two_bodys.solve_ivp(Gal1)
 test2 = two_bodys.solve_ivp(Gal2)
 
@@ -56,6 +51,8 @@ fig, ax = plt.subplots(figsize=(15, 15))
 ax.set_ylim(-50, 50)
 ax.set_xlim(-50, 50)
 
-ax.scatter(x1, y1, c='b')
-ax.scatter(x2, y2, c='r')
+ax.scatter(x1[0], y1[0], c='g')
+ax.scatter(x2[0], y2[0], c='g')
+ax.scatter(x1[1:50], y1[1:50], c='b')
+ax.scatter(x2[1:50], y2[1:50], c='r')
 plt.show()
