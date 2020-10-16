@@ -72,29 +72,29 @@ class GalCombine:
         n = k * self.semi_major_axis**(-3 / 2)
 
         # Find E1
-        def f(E1, a, b, e, r):
-            return ((np.sqrt((a * (np.cos(E1) - e))**2 + (b * np.sin(E1))**2) - r)).value
+        def f(E, a, b, e, r):
+            return ((np.sqrt((a * (np.cos(E) - e))**2 + (b * np.sin(E))**2) - r)).value
 
         print("Finding E1")
-        E1 = brentq(f, 0, np.pi, xtol=10e-6,
-                    args=(
-                        -1*self.d_perigalactic / (self.eccentricity - 1),
-                        self.semi_major_axis * np.sqrt(1 - self.eccentricity**2),
-                        self.eccentricity,
-                        self.inital_separation)
-                    )
+        E1 = -brentq(f, 0, np.pi, xtol=10e-6,
+                     args=(
+                         -1*self.d_perigalactic / (self.eccentricity - 1),
+                         self.semi_major_axis * np.sqrt(1 - self.eccentricity**2),
+                         self.eccentricity,
+                         self.inital_separation)
+                     )
         print(E1)
         print("Done")
 
         # Find E2
         print("Finding E2")
-        E2 = brentq(f, 0, np.pi, xtol=10e-6,
-                    args=(
-                        -self.d_perigalactic / (self.eccentricity - 1),
-                        self.semi_major_axis * np.sqrt(1 - self.eccentricity**2),
-                        self.eccentricity,
-                        self.inital_separation)
-                    )
+        E2 = -brentq(f, 0, np.pi, xtol=10e-6,
+                     args=(
+                         -self.d_perigalactic / (self.eccentricity - 1),
+                         self.semi_major_axis * np.sqrt(1 - self.eccentricity**2),
+                         self.eccentricity,
+                         self.inital_separation)
+                     )
         print(E2)
         print("Done")
 
@@ -136,6 +136,7 @@ class GalCombine:
         self.xcom = (x1 * self.Mass1 + x2 * self.Mass2) / self.MassTot
         self.ycom = (y1 * self.Mass1 + y2 * self.Mass2) / self.MassTot
         print('xcom = ' + str(self.xcom))
+        print('ycom = ' + str(self.ycom))
 
         if which_gal == self.Gal1:
             return x1, y1, vx1, vy1
@@ -154,7 +155,8 @@ class GalCombine:
         """Returns the initial positions and velocities for galaxy given
          by which_gal. Utility function."""
         x, y, vx, vy = self._get_vxvy(which_gal)
-        print(str(which_gal) + ': x,y,vx,vy = ' + str((x, y, vx.decompose(), vy.decompose())))
+        print(str(which_gal) + ': x,y,vx,vy = ' + str((x, y, vx.decompose(),
+                                                       vy.decompose())))
         return x, y, vx, vy
 
     def _equations(self, t, p):
