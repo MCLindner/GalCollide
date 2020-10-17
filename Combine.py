@@ -60,7 +60,7 @@ class GalCombine:
         self.Mass2 = float(self.Gal2['mass'].sum().in_units('kg')) * u.kg
         self.MassTot = self.Mass1 + self.Mass2
 
-    def _get_vxvy(self, which_gal):
+    def _calculate_ICs(self, which_gal):
         """Finds the velocity componants in cartesian that, given the
         parameters passed into the class, would result
         in a Keplerian two-body orbit."""
@@ -76,25 +76,35 @@ class GalCombine:
             return ((np.sqrt((a * (np.cos(E) - e))**2 + (b * np.sin(E))**2) - r)).value
 
         print("Finding E1")
-        E1 = -brentq(f, 0, np.pi, xtol=10e-6,
-                     args=(
-                         -1*self.d_perigalactic / (self.eccentricity - 1),
-                         self.semi_major_axis * np.sqrt(1 - self.eccentricity**2),
-                         self.eccentricity,
-                         self.inital_separation)
-                     )
+        try:
+            E1 = -brentq(f, 0.0001, np.pi, xtol=10e-6,
+                         args=(
+                             -1*self.d_perigalactic / (self.eccentricity - 1),
+                             self.semi_major_axis * np.sqrt(1 - self.eccentricity**2),
+                             self.eccentricity,
+                             self.inital_separation)
+                         )
+        except ValueError:
+            print('Error: (-1*d_perigalactic * e) / (eccentricity - 1)) - r) must be positive')
+            exit()
+
         print(E1)
         print("Done")
 
         # Find E2
         print("Finding E2")
-        E2 = -brentq(f, 0, np.pi, xtol=10e-6,
-                     args=(
-                         -self.d_perigalactic / (self.eccentricity - 1),
-                         self.semi_major_axis * np.sqrt(1 - self.eccentricity**2),
-                         self.eccentricity,
-                         self.inital_separation)
-                     )
+        try:
+            E2 = -brentq(f, 0.0001, np.pi, xtol=10e-6,
+                         args=(
+                             -self.d_perigalactic / (self.eccentricity - 1),
+                             self.semi_major_axis * np.sqrt(1 - self.eccentricity**2),
+                             self.eccentricity,
+                             self.inital_separation)
+                         )
+        except ValueError:
+            print('Error: (-1*d_perigalactic * e) / (eccentricity - 1)) - r) must be positive')
+            exit()
+
         print(E2)
         print("Done")
 
@@ -154,7 +164,7 @@ class GalCombine:
     def _initial_conds(self, which_gal):
         """Returns the initial positions and velocities for galaxy given
          by which_gal. Utility function."""
-        x, y, vx, vy = self._get_vxvy(which_gal)
+        x, y, vx, vy = self._calculate_ICs(which_gal)
         print(str(which_gal) + ': x,y,vx,vy = ' + str((x, y, vx.decompose(),
                                                        vy.decompose())))
         return x, y, vx, vy
