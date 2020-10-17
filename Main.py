@@ -7,7 +7,7 @@ Gal1 = p.Gal1
 Gal2 = p.Gal2
 dDelta = p.dDelta
 d_perigalactic = p.d_perigalactic
-inital_separation = p.initial_separation
+initial_separation = p.initial_separation
 eccentricity = p.eccentricity
 writename = p.writename
 Omega1 = p.Omega1
@@ -18,17 +18,19 @@ w2 = p.w2
 i2 = p.i2
 transform = p.transform
 
+if (initial_separation < d_perigalactic):
+    print("Error: Initial separation must be greater than the perigalactic distance")
+    exit()
+else:
+    pass
+
 two_bodys = GalCombine(Gal1, Gal2, dDelta,
-                       d_perigalactic, inital_separation, eccentricity,
+                       d_perigalactic, initial_separation, eccentricity,
                        writename, Omega1, w1, i1, Omega2, w2, i2,
                        transform)
 
-try:
-    combined = two_bodys.combine()
-except ValueError:
-    print('Error: d_perigalactic must be less than initial separation')
-    exit()
 
+combined = two_bodys.combine()
 two_bodys.make_param_file()
 two_bodys.make_director_file()
 
