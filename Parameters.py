@@ -1,9 +1,5 @@
 #!/usr/bin/env python
 
-"""Main.py: Description."""
-
-__author__ = "Michael Lindner"
-
 import pynbody
 
 # Paths to tipsy files for galaxy models
