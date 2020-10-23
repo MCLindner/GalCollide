@@ -6,7 +6,11 @@ __author__ = "Michael Lindner"
 
 import pynbody
 import numpy as np
+import ObervationParameters.py as p
 
+L = p.L
+V = p.V
+snapshot = p.snapshot
 L = 39.5
 V = 165
 
@@ -40,8 +44,6 @@ def transformV(row):
     row = (MV * np.matrix(row).transpose())
     return(row)
 
-
-snapshot = pynbody.load('TheMice.tipsy.005000')
 
 lengths = {}
 for fam in snapshot.families():
