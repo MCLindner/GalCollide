@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+
+"""Main.py: Description."""
+
+__author__ = "Michael Lindner"
+
 import pynbody
 import numpy as np
 from scipy.integrate import solve_ivp
@@ -16,26 +22,33 @@ class GalCombine:
     d_perigalactic = perigalactic distance given in kpc
     initial_separation = initial separation distance between galaxies in kpc
     eccentricity = eccentricity of the system
+    time = time since (or until) first perigalacticon passage in Myr
     writename = output file name (string)
     Omega1, w1, i1 = Euler angles for galaxy 1
     Omega2, w2, i2 = Euler angles for galaxy 2
     transform = Bool, whether or not to transform each galaxy by Euler angles
 
     Public methods:
-    combine(): Generates the initial condition tipsy file
+    eccentric_anomalies():
 
-    get_period() Gets the period of the orbit of the system
+    calculate_ICs():
 
-    make_param_file() creates the param file for changa
+    combine(): generates the initial condition tipsy file
 
-    make_director_file() creates the director file for changa movie output
+    get_period(): gets the period of the orbit of the system
+
+    get_t_out():
+
+    make_param_file(): creates the param file for changa
+
+    make_director_file(): creates the director file for changa movie output
 
     solve_ivp(): tests that the initial condition is
      correct by solving the two body problem.
     """
 
     def __init__(self, Gal1, Gal2, dDelta,
-                 d_perigalactic, inital_separation, eccentricity,
+                 d_perigalactic, inital_separation, eccentricity, time,
                  writename, Omega1, w1, i1, Omega2, w2, i2, transform):
         self.Gal1 = Gal1
         self.Gal2 = Gal2
@@ -43,6 +56,7 @@ class GalCombine:
         self.d_perigalactic = d_perigalactic * u.kpc
         self.eccentricity = eccentricity
         self.inital_separation = inital_separation * u.kpc
+        self.time = time * u.Myr
         self.writename = writename
         self.Omega1 = Omega1
         self.w1 = w1
@@ -60,32 +74,22 @@ class GalCombine:
         self.Mass2 = float(self.Gal2['mass'].sum().in_units('kg')) * u.kg
         self.MassTot = self.Mass1 + self.Mass2
 
-    def _calculate_ICs(self, which_gal):
-        """Finds the velocity componants in cartesian that, given the
-        parameters passed into the class, would result
-        in a Keplerian two-body orbit."""
-
-        # Constants
-        k = np.sqrt(self.G * self.MassTot)
-
-        # Derived parameters
-        n = k * self.semi_major_axis**(-3 / 2)
-
+    def eccentric_anomalies(self):
         # Find E1
         def f(E, a, b, e, r):
             return ((np.sqrt((a * (np.cos(E) - e))**2 + (b * np.sin(E))**2) - r)).value
 
         print("Finding E1")
         try:
-            E1 = -brentq(f, 0.0001, np.pi, xtol=10e-6,
+            E1 = -brentq(f, 0, np.pi, xtol=10e-6,
                          args=(
-                             -1*self.d_perigalactic / (self.eccentricity - 1),
-                             self.semi_major_axis * np.sqrt(1 - self.eccentricity**2),
+                             self.semi_major_axis,
+                             self.semi_minor_axis,
                              self.eccentricity,
                              self.inital_separation)
                          )
         except ValueError:
-            print('Error: (-1*d_perigalactic * e) / (eccentricity - 1)) - r) must be positive')
+            print('Error: semi-major axis larger than apoapsis')
             exit()
 
         print(E1)
@@ -94,22 +98,34 @@ class GalCombine:
         # Find E2
         print("Finding E2")
         try:
-            E2 = -brentq(f, 0.0001, np.pi, xtol=10e-6,
+            E2 = -brentq(f, 0, np.pi, xtol=10e-6,
                          args=(
-                             -self.d_perigalactic / (self.eccentricity - 1),
-                             self.semi_major_axis * np.sqrt(1 - self.eccentricity**2),
+                             self.semi_major_axis,
+                             self.semi_minor_axis,
                              self.eccentricity,
                              self.inital_separation)
                          )
         except ValueError:
-            print('Error: (-1*d_perigalactic * e) / (eccentricity - 1)) - r) must be positive')
+            print('Error: semi-major axis larger than apoapsis')
             exit()
 
         print(E2)
         print("Done")
+        return E1, E2
+
+    def calculate_ICs(self, which_gal):
+        """Finds the velocity componants in cartesian that, given the
+        parameters passed into the class, would result
+        in a Keplerian two-body orbit."""
+        # Constants
+        k = np.sqrt(self.G * self.MassTot)
+
+        # Derived parameters
+        n = k * self.semi_major_axis**(-3 / 2)
+
+        E1, E2 = self.eccentric_anomalies()
 
         # Gal1 ###############################################################
-
         # Find positions
         X1 = self.semi_major_axis * (np.cos(E1) - self.eccentricity)
         Y1 = self.semi_minor_axis * np.sin(E1)
@@ -161,10 +177,20 @@ class GalCombine:
         print('T:' + str(T.decompose()))
         return T
 
+    def get_t_out(self):
+        E1, E2 = self.eccentric_anomalies()
+        M1 = E1 - self.eccentricity * np.sin(E1)
+        # t - tau = time since first pericenter passage = t_now
+        t_now = M1 / np.sqrt((self.G * self.Mass1) / self.semi_major_axis**3)
+        print("tnow:" + str(t_now.to(u.Gyr)))
+        t_since_passage_obs = (self.time).to(u.s)
+        t_out = + t_since_passage_obs - (t_now).to(u.s)
+        return t_out
+
     def _initial_conds(self, which_gal):
         """Returns the initial positions and velocities for galaxy given
          by which_gal. Utility function."""
-        x, y, vx, vy = self._calculate_ICs(which_gal)
+        x, y, vx, vy = self.calculate_ICs(which_gal)
         print(str(which_gal) + ': x,y,vx,vy = ' + str((x, y, vx.decompose(),
                                                        vy.decompose())))
         return x, y, vx, vy
@@ -326,20 +352,20 @@ class GalCombine:
     def make_param_file(self):
         """Creates a param file for use in ChaNGa.
          Sets nSteps to integrate over one orbital period."""
-        p = self.get_period()
+        t = self.get_t_out()
+        t_gyears = t.to(u.Gyr)
+        t_steps = t_gyears / self.dDelta
 
-        gyears = p.to(1e9 * u.year)
-        steps = gyears / self.dDelta
-
+        print("t_steps = " + str(t_steps))
         achInFile = self.writename
 
         # write data in a file.
         file = open(self.writename + ".param", "w")
-        L = ["nSteps = " + str(int(steps.value)) + "\n",
+        L = ["nSteps = " + str(round(t_steps.value)) + "\n",
              "dTheta = 0.7 \n",
              "dEta = .03 \n",
              "dDelta = " + str(self.dDelta) + " \n",
-             "iOutInterval = 500 \n",
+             "iOutInterval = " + str(round(t_steps.value / 5)) + " \n",
              "achInFile = " + achInFile + " \n",
              "achOutName = " + self.writename + " \n",
              "iLogInterval = 1 \n",
