@@ -28,8 +28,5 @@ writename = "TheMiceV2.tipsy"
 Omega1, w1, i1 = 0, 4.10152, 0.261799
 Omega2, w2, i2 = 0, 3.49066, 0.436332
 
-# Viewing angle relative to orbital plane
-thetaX, thetaY, thetaZ = 78, -44, -130
-
 # Transform galaxies by Euler angles
 transform = True

@@ -16,15 +16,10 @@ V = 165
 
 # Rotate from simulation coordinates to observation coordinates
 # R=LMr+Rc,V=VMv+Vc.
-# Nice
 
-# Omega1 = 1.36136
-# w1 = -0.767945
-# i1 = -2.26893
-
-w1 = 1.36136
-i1 = -0.767945
-Omega1 = -2.26893
+w1 = p.w
+i1 = p.i
+Omega1 = p.Omega
 
 MP = L * np.matrix([[np.cos(Omega1)*np.cos(w1)-np.sin(Omega1)*np.cos(i1)*np.sin(w1), -np.cos(Omega1)*np.sin(w1)-np.sin(Omega1)*np.cos(i1)*np.cos(w1), np.sin(Omega1)*np.sin(i1)],
                    [np.sin(Omega1)*np.cos(w1)+np.cos(Omega1)*np.cos(i1)*np.sin(w1), -np.sin(Omega1)*np.sin(w1)+np.cos(Omega1)*np.cos(i1)*np.cos(w1), -np.cos(Omega1)*np.sin(i1)],
