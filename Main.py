@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+
+"""Main.py: Description."""
+
+__author__ = "Michael Lindner"
+
 import matplotlib.pylab as plt
 import astropy.units as u
 import Parameters as p
@@ -9,6 +15,7 @@ dDelta = p.dDelta
 d_perigalactic = p.d_perigalactic
 initial_separation = p.initial_separation
 eccentricity = p.eccentricity
+time = p.time
 writename = p.writename
 Omega1 = p.Omega1
 w1 = p.w1
@@ -26,13 +33,12 @@ else:
 
 two_bodys = GalCombine(Gal1, Gal2, dDelta,
                        d_perigalactic, initial_separation, eccentricity,
-                       writename, Omega1, w1, i1, Omega2, w2, i2,
+                       time, writename, Omega1, w1, i1, Omega2, w2, i2,
                        transform)
 
-
-combined = two_bodys.combine()
 two_bodys.make_param_file()
 two_bodys.make_director_file()
+combined = two_bodys.combine()
 
 test1 = two_bodys.solve_ivp(Gal1)
 test2 = two_bodys.solve_ivp(Gal2)

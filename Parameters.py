@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+
+"""Main.py: Description."""
+
+__author__ = "Michael Lindner"
+
 import pynbody
 
 # Paths to tipsy files for galaxy models
@@ -16,8 +22,11 @@ initial_separation = 10**2
 # Eccentricity of system
 eccentricity = 0.99
 
+# Time since first perigalacticon passage in Myr
+time = 250
+
 # Output file name
-writename = "TheMice.tipsy"
+writename = "TheMiceV2.tipsy"
 
 # Euler angles to transform each galaxy by
 Omega1, w1, i1 = 0, 4.10152, 0.261799
