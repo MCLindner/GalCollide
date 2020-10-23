@@ -6,6 +6,8 @@ import numpy as np
 from PIL import Image
 import Parameters.py as p
 
+writename = p.writename
+
 files = []
 a = np.arange(0, 486, 1)
 for value in a:
