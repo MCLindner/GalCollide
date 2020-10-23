@@ -6,7 +6,7 @@ __author__ = "Michael Lindner"
 
 import pynbody
 import numpy as np
-import ObervationParameters.py as p
+import ObservationParameters as p
 
 L = p.L
 V = p.V
