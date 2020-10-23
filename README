@@ -1,10 +1,13 @@
-Usage:
+------------------------------------------------------------------------------
+Combining galaxy models to create an initial condition for a collision:
 Run "python Main.py" to produce initial condition of two galaxies in a Keplerian orbit.
 Place galaxy models in InitialConditions directory and specify file name in Parameters.py
 The output file name is specified along with orbital parameters in Parameters.py
 
 Example Parameters.py file:
 ########################################
+#!/usr/bin/env python
+
 import pynbody
 
 # Paths to tipsy files for galaxy models
@@ -41,3 +44,36 @@ Outputs:
 writename.tipsy
 writename.tipsy.param
 writename.tipsy.director
+
+Copy outputs (writename*) to your ChaNGa working directory and run!
+
+Once finished, you can place the ChaNGa output files into the data directory and
+run MakeMovie to create a .gif of the collision, which will be saved in the
+Animations directory.
+------------------------------------------------------------------------------
+Transforming to observation frame:
+Move your changa outputs to the Data directory. To transform a tipsy snapshot 
+(writename.tipsy) into the observation frame of reference, specify viewing angles and scaling factors in ObservationParameters.py. 
+
+Example ObservationParameters.py file:
+########################################
+#!/usr/bin/env python
+
+import pynbody
+
+# Tipsy snapshot to transform into observation frame
+snapshot = pynbody.load('./Data/TheMice.tipsy.005000')
+
+# Length scale factor
+L = 39.5
+
+# Velocity scale factor
+V = 165
+
+# Viewing angle relative to orbital plane
+w = 1.36136
+i = -0.767945
+Omega = -2.26893
+########################################
+
+Next, run ObservationFrame.py, which will output the final product, scaled.tipsy.
