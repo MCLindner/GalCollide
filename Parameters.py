@@ -18,7 +18,7 @@ initial_separation = 10**2
 # Eccentricity of system
 eccentricity = 0.99
 
-# Time since first perigalacticon passage in Myr
+# Time in Myr since first perigalacticon passage of desired output snapshot
 time = 250
 
 # Output file name

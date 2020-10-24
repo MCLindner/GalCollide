@@ -75,7 +75,8 @@ class GalCombine:
         self.MassTot = self.Mass1 + self.Mass2
 
     def eccentric_anomalies(self):
-        # Find E1
+        """Uses scipy.optimize.brenq to find the eccentric anomalies of
+        each of the galaxies in the system given the input parameters."""
         def f(E, a, b, e, r):
             return ((np.sqrt((a * (np.cos(E) - e))**2 + (b * np.sin(E))**2) - r)).value
 
@@ -178,6 +179,9 @@ class GalCombine:
         return T
 
     def get_t_out(self):
+        """Finds t_out, the ammount the time in seconds that the galaxies orbit
+         until they reach time since first perigalacticon passage  given
+         in Parameters.py. Used to determine NSteps in make_param_file()"""
         E1, E2 = self.eccentric_anomalies()
         M1 = E1 - self.eccentricity * np.sin(E1)
         # t - tau = time since first pericenter passage = t_now
@@ -350,8 +354,7 @@ class GalCombine:
         return combined
 
     def make_param_file(self):
-        """Creates a param file for use in ChaNGa.
-         Sets nSteps to integrate over one orbital period."""
+        """Creates a param file for use in ChaNGa."""
         t = self.get_t_out()
         t_gyears = t.to(u.Gyr)
         t_steps = t_gyears / self.dDelta
