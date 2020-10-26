@@ -19,7 +19,7 @@ initial_separation = 10**2
 eccentricity = 0.99
 
 # Time in Myr since first perigalacticon passage of desired output snapshot
-time = 250
+time = 175
 
 # Output file name
 writename = "TheMiceV2.tipsy"
