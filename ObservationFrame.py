@@ -48,6 +48,18 @@ cx = np.cos(xrot)
 cy = np.cos(yrot)
 cz = np.cos(zrot)
 
+# amat = np.matrix([[c_a, s_a, 0.0],
+#                   [-s_a, c_a, 0.0],
+#                   [0.0, 0.0, 1.0]])
+
+# bmat = np.matrix([[1.0, 0.0, 0.0],
+#                   [0.0, c_b, s_b],
+#                   [0.0, -s_b, c_b]])
+
+# gmat = np.matrix([[c_g, s_g, 0.0],
+#                   [-s_g, c_g, 0.0],
+#                   [0.0, 0.0, 1.0]])
+
 xmat = np.empty((3, 3))
 ymat = np.empty((3, 3))
 zmat = np.empty((3, 3))
@@ -69,18 +81,6 @@ rmat = np.matmul(zmat, tmp1)
 
 MP = L * rmat
 MV = V * rmat
-
-# w1 = p.w
-# i1 = p.i
-# Omega1 = p.Omega
-
-# MP = L * np.matrix([[np.cos(Omega1)*np.cos(w1)-np.sin(Omega1)*np.cos(i1)*np.sin(w1), -np.cos(Omega1)*np.sin(w1)-np.sin(Omega1)*np.cos(i1)*np.cos(w1), np.sin(Omega1)*np.sin(i1)],
-#                    [np.sin(Omega1)*np.cos(w1)+np.cos(Omega1)*np.cos(i1)*np.sin(w1), -np.sin(Omega1)*np.sin(w1)+np.cos(Omega1)*np.cos(i1)*np.cos(w1), -np.cos(Omega1)*np.sin(i1)],
-#                    [np.sin(i1)*np.sin(w1), np.sin(i1)*np.cos(w1), np.cos(i1)]])
-
-# MV = V * np.matrix([[np.cos(Omega1)*np.cos(w1)-np.sin(Omega1)*np.cos(i1)*np.sin(w1), -np.cos(Omega1)*np.sin(w1)-np.sin(Omega1)*np.cos(i1)*np.cos(w1), np.sin(Omega1)*np.sin(i1)],
-#                    [np.sin(Omega1)*np.cos(w1)+np.cos(Omega1)*np.cos(i1)*np.sin(w1), -np.sin(Omega1)*np.sin(w1)+np.cos(Omega1)*np.cos(i1)*np.cos(w1), -np.cos(Omega1)*np.sin(i1)],
-#                    [np.sin(i1)*np.sin(w1), np.sin(i1)*np.cos(w1), np.cos(i1)]])
 
 
 def transformP(row):

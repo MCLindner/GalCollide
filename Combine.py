@@ -14,7 +14,7 @@ import astropy.constants as const
 
 class GalCombine:
     """
-    Create an initial condition for two galaxies in a kepler orbit.
+    Create an initial condition for two galaxies in a Kepler orbit.
     Attributes:
     Gal1, PyNBody TipsySnap
     Gal2, PyNbody TipsySnap
@@ -24,8 +24,8 @@ class GalCombine:
     eccentricity = eccentricity of the system
     time = time since (or until) first perigalacticon passage in Myr
     writename = output file name (string)
-    Omega1, w1, i1 = Euler angles for galaxy 1
-    Omega2, w2, i2 = Euler angles for galaxy 2
+    W1, w1, i1 = Euler angles for galaxy 1
+    W2, w2, i2 = Euler angles for galaxy 2
     transform = Bool, whether or not to transform each galaxy by Euler angles
 
     Public methods:
@@ -49,7 +49,7 @@ class GalCombine:
 
     def __init__(self, Gal1, Gal2, dDelta,
                  d_perigalactic, inital_separation, eccentricity, time,
-                 writename, Omega1, w1, i1, Omega2, w2, i2, transform):
+                 writename, W1, w1, i1, W2, w2, i2, transform):
         self.Gal1 = Gal1
         self.Gal2 = Gal2
         self.dDelta = dDelta
@@ -58,10 +58,10 @@ class GalCombine:
         self.inital_separation = inital_separation * u.kpc
         self.time = time * u.Myr
         self.writename = writename
-        self.Omega1 = Omega1
+        self.W1 = W1
         self.w1 = w1
         self.i1 = i1
-        self.Omega2 = Omega2
+        self.W2 = W2
         self.w2 = w2
         self.i2 = i2
         self.transform = transform
@@ -70,9 +70,9 @@ class GalCombine:
         self.semi_minor_axis = (-d_perigalactic / (eccentricity - 1)) * np.sqrt(1 - eccentricity**2) * u.kpc
 
         self.G = const.G
-        self.Mass1 = float(self.Gal1['mass'].sum().in_units('kg')) * u.kg
-        self.Mass2 = float(self.Gal2['mass'].sum().in_units('kg')) * u.kg
-        self.MassTot = self.Mass1 + self.Mass2
+        self.Mass1 = float(self.Gal1["mass"].sum().in_units("kg")) * u.kg
+        self.Mass2 = float(self.Gal2["mass"].sum().in_units("kg")) * u.kg
+        self.m_tot = self.Mass1 + self.Mass2
 
     def eccentric_anomalies(self):
         """Uses scipy.optimize.brenq to find the eccentric anomalies of
@@ -80,7 +80,6 @@ class GalCombine:
         def f(E, a, b, e, r):
             return ((np.sqrt((a * (np.cos(E) - e))**2 + (b * np.sin(E))**2) - r)).value
 
-        print("Finding E1")
         try:
             E1 = -brentq(f, 0, np.pi, xtol=10e-6,
                          args=(
@@ -90,14 +89,10 @@ class GalCombine:
                              self.inital_separation)
                          )
         except ValueError:
-            print('Error: semi-major axis larger than apoapsis')
+            print("Error: semi-major axis may be larger than apoapsis")
             exit()
 
-        print(E1)
-        print("Done")
-
         # Find E2
-        print("Finding E2")
         try:
             E2 = -brentq(f, 0, np.pi, xtol=10e-6,
                          args=(
@@ -107,11 +102,9 @@ class GalCombine:
                              self.inital_separation)
                          )
         except ValueError:
-            print('Error: semi-major axis larger than apoapsis')
+            print("Error: semi-major axis may be larger than apoapsis")
             exit()
 
-        print(E2)
-        print("Done")
         return E1, E2
 
     def calculate_ICs(self, which_gal):
@@ -119,14 +112,19 @@ class GalCombine:
         parameters passed into the class, would result
         in a Keplerian two-body orbit."""
         # Constants
-        k = np.sqrt(self.G * self.MassTot)
+        k = np.sqrt(self.G * self.m_tot)
 
         # Derived parameters
         n = k * self.semi_major_axis**(-3 / 2)
 
+        print("Finding eccentric anomalies")
         E1, E2 = self.eccentric_anomalies()
+        print("Done")
+        print(E1, E2)
+        print("")
 
         # Gal1 ###############################################################
+
         # Find positions
         X1 = self.semi_major_axis * (np.cos(E1) - self.eccentricity)
         Y1 = self.semi_minor_axis * np.sin(E1)
@@ -160,10 +158,10 @@ class GalCombine:
         vy2 = q2 * vY2
 
         # Check that the center of mass is as it should be
-        self.xcom = (x1 * self.Mass1 + x2 * self.Mass2) / self.MassTot
-        self.ycom = (y1 * self.Mass1 + y2 * self.Mass2) / self.MassTot
-        print('xcom = ' + str(self.xcom))
-        print('ycom = ' + str(self.ycom))
+        self.xcom = (x1 * self.Mass1 + x2 * self.Mass2) / self.m_tot
+        self.ycom = (y1 * self.Mass1 + y2 * self.Mass2) / self.m_tot
+        print("xcom = " + str(self.xcom))
+        print("ycom = " + str(self.ycom))
 
         if which_gal == self.Gal1:
             return x1, y1, vx1, vy1
@@ -171,11 +169,13 @@ class GalCombine:
             return x2, y2, vx2, vy2
 
     def get_period(self):
-        """Returns the period of orbit in seconds based on Kepler's laws."""
-        k = np.sqrt(self.G * self.MassTot)
+        """Returns the period of orbit in seconds based on Kepler"s laws."""
+        k = np.sqrt(self.G * self.m_tot)
         a = self.semi_major_axis
         T = np.sqrt(((4 * np.pi**2) / (k**2)) * a**3)
-        print('T:' + str(T.decompose()))
+        print("T:" + str(T.decompose()))
+        print("")
+
         return T
 
     def get_t_out(self):
@@ -187,16 +187,20 @@ class GalCombine:
         # t - tau = time since first pericenter passage = t_now
         t_now = M1 / np.sqrt((self.G * self.Mass1) / self.semi_major_axis**3)
         print("tnow:" + str(t_now.to(u.Gyr)))
+        print("")
         t_since_passage_obs = (self.time).to(u.s)
         t_out = + t_since_passage_obs - (t_now).to(u.s)
+
         return t_out
 
     def _initial_conds(self, which_gal):
         """Returns the initial positions and velocities for galaxy given
          by which_gal. Utility function."""
         x, y, vx, vy = self.calculate_ICs(which_gal)
-        print(str(which_gal) + ': x,y,vx,vy = ' + str((x, y, vx.decompose(),
+        print(str(which_gal) + ": x,y,vx,vy = " + str((x, y, vx.decompose(),
                                                        vy.decompose())))
+        print("")
+
         return x, y, vx, vy
 
     def _equations(self, t, p):
@@ -212,8 +216,9 @@ class GalCombine:
 
         du1 = p[2]
         du2 = p[3]
-        du3 = -(((self.G * self.MassTot).value) / r**3) * (p[0])
-        du4 = -(((self.G * self.MassTot).value) / r**3) * (p[1])
+        du3 = -(((self.G * self.m_tot).value) / r**3) * (p[0])
+        du4 = -(((self.G * self.m_tot).value) / r**3) * (p[1])
+
         return [du1, du2, du3, du4]
 
     def solve_ivp(self, which_gal):
@@ -235,7 +240,35 @@ class GalCombine:
                             [x2.to(u.m).value, y2.to(u.m).value,
                              vx2.to(u.m / u.s).value, vy2.to(u.m / u.s).value],
                             t_eval=t_eval, rtol=1e-6)
+
         return sol
+
+    def _rmat(self, a, b, g):
+        """Docstring"""
+        c_a = np.cos(a)
+        c_b = np.cos(b)
+        c_g = np.cos(g)
+
+        s_a = np.sin(a)
+        s_b = np.sin(b)
+        s_g = np.sin(g)
+
+        amat = np.matrix([[c_a, s_a, 0.0],
+                          [-s_a, c_a, 0.0],
+                          [0.0, 0.0, 1.0]])
+
+        bmat = np.matrix([[1.0, 0.0, 0.0],
+                          [0.0, c_b, s_b],
+                          [0.0, -s_b, c_b]])
+
+        gmat = np.matrix([[c_g, s_g, 0.0],
+                          [-s_g, c_g, 0.0],
+                          [0.0, 0.0, 1.0]])
+
+        tmp1 = np.matmul(amat, bmat)
+        rmat = np.matmul(tmp1, gmat)
+
+        return rmat
 
     def combine(self):
         """Combines the two galaxies into a new TipsySnap.
@@ -245,16 +278,17 @@ class GalCombine:
         x1, y1, vx1, vy1 = self._initial_conds(which_gal=self.Gal1)
         x2, y2, vx2, vy2 = self._initial_conds(which_gal=self.Gal2)
 
-        x1 = ((x1).to(u.kpc)).value * (self.Mass1 / self.MassTot)
-        y1 = ((y1).to(u.kpc)).value * (self.Mass1 / self.MassTot)
-        x2 = ((x2).to(u.kpc)).value * (self.Mass2 / self.MassTot)
-        y2 = ((y2).to(u.kpc)).value * (self.Mass2 / self.MassTot)
+        x1 = ((x1).to(u.kpc)).value * (self.Mass1 / self.m_tot)
+        y1 = ((y1).to(u.kpc)).value * (self.Mass1 / self.m_tot)
+        x2 = ((x2).to(u.kpc)).value * (self.Mass2 / self.m_tot)
+        y2 = ((y2).to(u.kpc)).value * (self.Mass2 / self.m_tot)
 
-        vx1 = ((vx1).to(.9778 * u.km / u.s)).value * (self.Mass1 / self.MassTot)
-        vy1 = ((vy1).to(.9778 * u.km / u.s)).value * (self.Mass1 / self.MassTot)
-        vx2 = ((vx2).to(.9778 * u.km / u.s)).value * (self.Mass2 / self.MassTot)
-        vy2 = ((vy2).to(.9778 * u.km / u.s)).value * (self.Mass2 / self.MassTot)
+        vx1 = ((vx1).to(.9778 * u.km / u.s)).value * (self.Mass1 / self.m_tot)
+        vy1 = ((vy1).to(.9778 * u.km / u.s)).value * (self.Mass1 / self.m_tot)
+        vx2 = ((vx2).to(.9778 * u.km / u.s)).value * (self.Mass2 / self.m_tot)
+        vy2 = ((vy2).to(.9778 * u.km / u.s)).value * (self.Mass2 / self.m_tot)
         print("Done")
+        print("")
 
         lengths = {}
         for fam in self.Gal1.families():
@@ -262,36 +296,39 @@ class GalCombine:
 
         gal1_shifted = pynbody.new(**lengths)
 
-        def transform(row):
-            row = (P1 * np.matrix(row).transpose())
+        def transform(row, rmat):
+            row = (rmat * np.matrix(row).transpose())
             return(row)
 
         for fam in self.Gal1.families():
             s1 = self.Gal1[fam]
             if self.transform is True:
-                Omega1 = self.Omega1
-                w1 = self.w1
-                i1 = self.i1
-                P1 = np.matrix([[np.cos(Omega1)*np.cos(w1)-np.sin(Omega1)*np.cos(i1)*np.sin(w1), -np.cos(Omega1)*np.sin(w1)-np.sin(Omega1)*np.cos(i1)*np.cos(w1), np.sin(Omega1)*np.sin(i1)],
-                               [np.sin(Omega1)*np.cos(w1)+np.cos(Omega1)*np.cos(i1)*np.sin(w1), -np.sin(Omega1)*np.sin(w1)+np.cos(Omega1)*np.cos(i1)*np.cos(w1), -np.cos(Omega1)*np.sin(i1)],
-                               [np.sin(i1)*np.sin(w1), np.sin(i1)*np.cos(w1), np.cos(i1)]])
-                print(P1)
                 print("Tranforming " + str(fam))
-                s1['pos'] = np.apply_along_axis(transform, 1, s1['pos'])
-                s1['vel'] = np.apply_along_axis(transform, 1, s1['vel'])
+                s1["pos"] = np.apply_along_axis(transform, 1, s1["pos"],
+                                                (self._rmat(a=self.W1,
+                                                            b=self.i1,
+                                                            g=self.w1)))
+
+                s1["vel"] = np.apply_along_axis(transform, 1, s1["vel"],
+                                                (self._rmat(a=self.W1,
+                                                            b=self.i1,
+                                                            g=self.w1)))
                 print("Done")
+                print("")
+
             else:
                 pass
 
             print("Shifting family " + str(fam))
-            gal1_shifted[fam][:len(s1)]['pos'] = s1['pos'].in_units('kpc') + [x1, y1, 0]
-            gal1_shifted[fam][:len(s1)]['vel'] = s1['vel'].in_units('.9778 km s**-1') + [vx1, vy1, 0]
-            gal1_shifted[fam][:len(s1)]['mass'] = s1['mass'].in_units('2.2222858e5 Msol')
-            gal1_shifted[fam][:len(s1)]['rho'] = s1['rho'].in_units('2.2222858e5 Msol kpc**-3')
-            gal1_shifted[fam][:len(s1)]['eps'] = s1['eps'].in_units('kpc')
+            gal1_shifted[fam][:len(s1)]["pos"] = s1["pos"].in_units("kpc") + [x1, y1, 0]
+            gal1_shifted[fam][:len(s1)]["vel"] = s1["vel"].in_units(".9778 km s**-1") + [vx1, vy1, 0]
+            gal1_shifted[fam][:len(s1)]["mass"] = s1["mass"].in_units("2.2222858e5 Msol")
+            gal1_shifted[fam][:len(s1)]["rho"] = s1["rho"].in_units("2.2222858e5 Msol kpc**-3")
+            gal1_shifted[fam][:len(s1)]["eps"] = s1["eps"].in_units("kpc")
             print("Done")
+            print("")
 
-        gal1_shifted.write(filename='temp1.tipsy',
+        gal1_shifted.write(filename="temp1.tipsy",
                            fmt=pynbody.tipsy.TipsySnap,
                            cosmological=False)
 
@@ -301,36 +338,34 @@ class GalCombine:
 
         gal2_shifted = pynbody.new(**lengths)
 
-        def transform(row):
-            row = (P2 * np.matrix(row).transpose())
-            return(row)
-
         for fam in self.Gal2.families():
             s2 = self.Gal2[fam]
             if self.transform is True:
-                Omega1 = self.Omega2
-                w1 = self.w1
-                i1 = self.i1
-                P2 = np.matrix([[np.cos(Omega1)*np.cos(w1)-np.sin(Omega1)*np.cos(i1)*np.sin(w1), -np.cos(Omega1)*np.sin(w1)-np.sin(Omega1)*np.cos(i1)*np.cos(w1), np.sin(Omega1)*np.sin(i1)],
-                               [np.sin(Omega1)*np.cos(w1)+np.cos(Omega1)*np.cos(i1)*np.sin(w1), -np.sin(Omega1)*np.sin(w1)+np.cos(Omega1)*np.cos(i1)*np.cos(w1), -np.cos(Omega1)*np.sin(i1)],
-                               [np.sin(i1)*np.sin(w1), np.sin(i1)*np.cos(w1), np.cos(i1)]])
                 print("Tranforming " + str(fam))
-                print(P2)
-                s2['pos'] = np.apply_along_axis(transform, 1, s2['pos'])
-                s2['vel'] = np.apply_along_axis(transform, 1, s2['vel'])
+                s1["pos"] = np.apply_along_axis(transform, 1, s1["pos"],
+                                                (self._rmat(a=self.W2,
+                                                            b=self.i2,
+                                                            g=self.w2)))
+
+                s1["vel"] = np.apply_along_axis(transform, 1, s1["vel"],
+                                                (self._rmat(a=self.W2,
+                                                            b=self.i2,
+                                                            g=self.w2)))
                 print("Done")
+                print("")
             else:
                 pass
 
             print("Shifting family " + str(fam))
-            gal2_shifted[fam][:len(s2)]['pos'] = s2['pos'].in_units('kpc') + [x2, y2, 0]
-            gal2_shifted[fam][:len(s2)]['vel'] = s2['vel'].in_units('.9778 km s**-1') + [vx2, vy2, 0]
-            gal2_shifted[fam][:len(s2)]['mass'] = s2['mass'].in_units('2.2222858e5 Msol')
-            gal2_shifted[fam][:len(s2)]['rho'] = s2['rho'].in_units('2.2222858e5 Msol kpc**-3')
-            gal2_shifted[fam][:len(s2)]['eps'] = s2['eps'].in_units('kpc')
+            gal2_shifted[fam][:len(s2)]["pos"] = s2["pos"].in_units("kpc") + [x2, y2, 0]
+            gal2_shifted[fam][:len(s2)]["vel"] = s2["vel"].in_units(".9778 km s**-1") + [vx2, vy2, 0]
+            gal2_shifted[fam][:len(s2)]["mass"] = s2["mass"].in_units("2.2222858e5 Msol")
+            gal2_shifted[fam][:len(s2)]["rho"] = s2["rho"].in_units("2.2222858e5 Msol kpc**-3")
+            gal2_shifted[fam][:len(s2)]["eps"] = s2["eps"].in_units("kpc")
             print("Done")
+            print("")
 
-        gal2_shifted.write(filename='temp2.tipsy',
+        gal2_shifted.write(filename="temp2.tipsy",
                            fmt=pynbody.tipsy.TipsySnap,
                            cosmological=False)
 
@@ -343,7 +378,7 @@ class GalCombine:
         for fam in self.Gal1.families():
             s1 = gal1_shifted[fam]
             s2 = gal2_shifted[fam]
-            for arname in 'pos', 'vel', 'mass', 'rho', 'eps':
+            for arname in "pos", "vel", "mass", "rho", "eps":
                 combined[fam][:len(s1)][arname] = s1[arname]
                 combined[fam][len(s1):][arname] = s2[arname]
 
@@ -351,6 +386,8 @@ class GalCombine:
                        fmt=pynbody.tipsy.TipsySnap,
                        cosmological=False)
         print("Done")
+        print("")
+
         return combined
 
     def make_param_file(self):

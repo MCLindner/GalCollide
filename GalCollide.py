@@ -17,10 +17,10 @@ initial_separation = p.initial_separation
 eccentricity = p.eccentricity
 time = p.time
 writename = p.writename
-Omega1 = p.Omega1
+W1 = p.W1
 w1 = p.w1
 i1 = p.i1
-Omega2 = p.Omega2
+W2 = p.W2
 w2 = p.w2
 i2 = p.i2
 transform = p.transform
@@ -33,7 +33,7 @@ else:
 
 two_bodys = GalCombine(Gal1, Gal2, dDelta,
                        d_perigalactic, initial_separation, eccentricity,
-                       time, writename, Omega1, w1, i1, Omega2, w2, i2,
+                       time, writename, W1, w1, i1, W2, w2, i2,
                        transform)
 
 two_bodys.make_param_file()

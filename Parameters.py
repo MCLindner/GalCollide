@@ -22,11 +22,11 @@ eccentricity = 0.99
 time = 175
 
 # Output file name
-writename = "TheMiceV2.tipsy"
+writename = "Testing.tipsy"
 
 # Euler angles to transform each galaxy by
-Omega1, w1, i1 = 0, 4.10152, 0.261799
-Omega2, w2, i2 = 0, 3.49066, 0.436332
+W1, w1, i1 = 0, 4.10152, 0.261799
+W2, w2, i2 = 0, 3.49066, 0.436332
 
 # Transform galaxies by Euler angles
 transform = True
