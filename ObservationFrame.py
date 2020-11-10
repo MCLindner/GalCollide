@@ -6,6 +6,8 @@ __author__ = "Michael Lindner"
 
 import pynbody
 import numpy as np
+import matplotlib.pyplot as plt
+import astropy.units as u
 import ObservationParameters as p
 
 L = p.L
@@ -40,48 +42,49 @@ xrot = p.thetax
 yrot = p.thetay
 zrot = p.thetaz
 
-sx = np.sin(xrot)
-sy = np.sin(yrot)
-sz = np.sin(zrot)
+s_x = np.sin(xrot)
+s_y = np.sin(yrot)
+s_z = np.sin(zrot)
 
-cx = np.cos(xrot)
-cy = np.cos(yrot)
-cz = np.cos(zrot)
+c_x = np.cos(xrot)
+c_y = np.cos(yrot)
+c_z = np.cos(zrot)
 
-# amat = np.matrix([[c_a, s_a, 0.0],
-#                   [-s_a, c_a, 0.0],
-#                   [0.0, 0.0, 1.0]])
+xmat = np.matrix([[1.0,  0.0,  0.0],
+                  [0.0,  c_x,  s_x],
+                  [0.0, -s_x,  c_x]])
 
-# bmat = np.matrix([[1.0, 0.0, 0.0],
-#                   [0.0, c_b, s_b],
-#                   [0.0, -s_b, c_b]])
+ymat = np.matrix([[c_y,  0.0, -s_y],
+                  [0.0,  1.0,  0.0],
+                  [s_y,  0.0,  c_y]])
 
-# gmat = np.matrix([[c_g, s_g, 0.0],
-#                   [-s_g, c_g, 0.0],
-#                   [0.0, 0.0, 1.0]])
+zmat = np.matrix([[c_z,  s_z,  0.0],
+                  [s_z,  c_z,  0.0],
+                  [0.0,  0.0,  1.0]])
 
 xmat = np.empty((3, 3))
 ymat = np.empty((3, 3))
 zmat = np.empty((3, 3))
 
-xmat[0][0] = 1.0;    xmat[0][1] = 0.0;    xmat[0][2] = 0.0;
-xmat[1][0] = 0.0;    xmat[1][1] =  cx;    xmat[1][2] =  sx;
-xmat[2][0] = 0.0;    xmat[2][1] = -sx;    xmat[2][2] =  cx;
+# xmat[0][0] = 1.0;    xmat[0][1] = 0.0;    xmat[0][2] = 0.0;
+# xmat[1][0] = 0.0;    xmat[1][1] =  cx;    xmat[1][2] =  sx;
+# xmat[2][0] = 0.0;    xmat[2][1] = -sx;    xmat[2][2] =  cx;
 
-ymat[0][0] =  cy;    ymat[0][1] = 0.0;    ymat[0][2] = -sy;
-ymat[1][0] = 0.0;    ymat[1][1] = 1.0;    ymat[1][2] = 0.0;
-ymat[2][0] =  sy;    ymat[2][1] = 0.0;    ymat[2][2] =  cy;
+# ymat[0][0] =  cy;    ymat[0][1] = 0.0;    ymat[0][2] = -sy;
+# ymat[1][0] = 0.0;    ymat[1][1] = 1.0;    ymat[1][2] = 0.0;
+# ymat[2][0] =  sy;    ymat[2][1] = 0.0;    ymat[2][2] =  cy;
 
-zmat[0][0] =  cz;    zmat[0][1] =  sz;    zmat[0][2] = 0.0;
-zmat[1][0] = -sz;    zmat[1][1] =  cz;    zmat[1][2] = 0.0;
-zmat[2][0] = 0.0;    zmat[2][1] = 0.0;    zmat[2][2] = 1.0;
+# zmat[0][0] =  cz;    zmat[0][1] =  sz;    zmat[0][2] = 0.0;
+# zmat[1][0] = -sz;    zmat[1][1] =  cz;    zmat[1][2] = 0.0;
+# zmat[2][0] = 0.0;    zmat[2][1] = 0.0;    zmat[2][2] = 1.0;
+
+
 
 tmp1 = np.matmul(xmat, ymat)
 rmat = np.matmul(zmat, tmp1)
 
 MP = L * rmat
 MV = V * rmat
-
 
 def transformP(row):
     row = (MP * np.matrix(row).transpose())
