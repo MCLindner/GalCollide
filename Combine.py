@@ -67,8 +67,8 @@ class GalCombine:
         self.transform = transform
 
         self.semi_major_axis = (-d_perigalactic / (eccentricity - 1)) * u.kpc
-        self.semi_minor_axis = (-d_perigalactic / (eccentricity - 1)) * np.sqrt(1 - eccentricity**2) * u.kpc
-
+        self.semi_minor_axis = (-d_perigalactic / (eccentricity - 1)
+                                ) * np.sqrt(1 - eccentricity**2) * u.kpc
         self.G = const.G
         self.Mass1 = float(self.Gal1["mass"].sum().in_units("kg")) * u.kg
         self.Mass2 = float(self.Gal2["mass"].sum().in_units("kg")) * u.kg
@@ -130,8 +130,10 @@ class GalCombine:
         Y1 = self.semi_minor_axis * np.sin(E1)
 
         # Find velocity componants
-        vX1 = (-self.semi_major_axis * n * np.sin(E1)) / (1 - self.eccentricity * np.cos(E1))
-        vY1 = (self.semi_minor_axis * n * np.cos(E1)) / (1 - self.eccentricity * np.cos(E1))
+        vX1 = (-self.semi_major_axis * n * np.sin(E1)) / \
+            (1 - self.eccentricity * np.cos(E1))
+        vY1 = (self.semi_minor_axis * n * np.cos(E1)) / \
+            (1 - self.eccentricity * np.cos(E1))
 
         # Transition from position in orbital plane to position in space
         q1 = -1
@@ -147,8 +149,10 @@ class GalCombine:
         Y2 = self.semi_minor_axis * np.sin(E2)
 
         # Find velocity componants
-        vX2 = (-self.semi_major_axis * n * np.sin(E2)) / (1 - self.eccentricity * np.cos(E2))
-        vY2 = (self.semi_minor_axis * n * np.cos(E2)) / (1 - self.eccentricity * np.cos(E2))
+        vX2 = (-self.semi_major_axis * n * np.sin(E2)) / \
+            (1 - self.eccentricity * np.cos(E2))
+        vY2 = (self.semi_minor_axis * n * np.cos(E2)) / \
+            (1 - self.eccentricity * np.cos(E2))
 
         # Transition from position in orbital plane to position in space
         q2 = 1
@@ -253,17 +257,17 @@ class GalCombine:
         s_b = np.sin(b)
         s_g = np.sin(g)
 
-        amat = np.matrix([[c_a, s_a, 0.0],
-                          [-s_a, c_a, 0.0],
-                          [0.0, 0.0, 1.0]])
+        amat = np.matrix([[c_a,  s_a,  0.0],
+                          [-s_a, c_a,  0.0],
+                          [0.0,  0.0,  1.0]])
 
-        bmat = np.matrix([[1.0, 0.0, 0.0],
-                          [0.0, c_b, s_b],
-                          [0.0, -s_b, c_b]])
+        bmat = np.matrix([[1.0,  0.0,  0.0],
+                          [0.0,  c_b,  s_b],
+                          [0.0, -s_b,  c_b]])
 
-        gmat = np.matrix([[c_g, s_g, 0.0],
-                          [-s_g, c_g, 0.0],
-                          [0.0, 0.0, 1.0]])
+        gmat = np.matrix([[c_g,  s_g,  0.0],
+                          [-s_g, c_g,  0.0],
+                          [0.0,  0.0,  1.0]])
 
         tmp1 = np.matmul(amat, bmat)
         rmat = np.matmul(tmp1, gmat)
