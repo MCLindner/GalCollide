@@ -329,6 +329,12 @@ class GalCombine:
             gal1_shifted[fam][:len(s1)]["mass"] = s1["mass"].in_units("2.2222858e5 Msol")
             gal1_shifted[fam][:len(s1)]["rho"] = s1["rho"].in_units("2.2222858e5 Msol kpc**-3")
             gal1_shifted[fam][:len(s1)]["eps"] = s1["eps"].in_units("kpc")
+
+            if str(fam) == 'g':
+                gal1_shifted[fam][:len(s1)]["temp"] = s1["temp"]
+            else:
+                pass
+
             print("Done")
             print("")
 
@@ -366,6 +372,12 @@ class GalCombine:
             gal2_shifted[fam][:len(s2)]["mass"] = s2["mass"].in_units("2.2222858e5 Msol")
             gal2_shifted[fam][:len(s2)]["rho"] = s2["rho"].in_units("2.2222858e5 Msol kpc**-3")
             gal2_shifted[fam][:len(s2)]["eps"] = s2["eps"].in_units("kpc")
+
+            if str(fam) == 'g':
+                gal1_shifted[fam][:len(s1)]["temp"] = s1["temp"]
+            else:
+                pass
+
             print("Done")
             print("")
 
