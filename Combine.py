@@ -374,7 +374,7 @@ class GalCombine:
             gal2_shifted[fam][:len(s2)]["eps"] = s2["eps"].in_units("kpc")
 
             if str(fam) == 'g':
-                gal1_shifted[fam][:len(s1)]["temp"] = s1["temp"]
+                gal2_shifted[fam][:len(s2)]["temp"] = s2["temp"]
             else:
                 pass
 
