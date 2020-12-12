@@ -330,7 +330,7 @@ class GalCombine:
             gal1_shifted[fam][:len(s1)]["rho"] = s1["rho"].in_units("2.2222858e5 Msol kpc**-3")
             gal1_shifted[fam][:len(s1)]["eps"] = s1["eps"].in_units("kpc")
 
-            if str(fam) == 'g':
+            if str(fam) == 'gas':
                 gal1_shifted[fam][:len(s1)]["temp"] = s1["temp"]
             else:
                 pass
@@ -406,6 +406,14 @@ class GalCombine:
 
         return combined
 
+    def check_gas(self):
+        fams1 = self.Gal1.families()
+        fams2 = self.Gal2.families()
+        for fam in fams1 and fams2:
+            if str(fam) == 'gas':
+                print('Using gas')
+                self.use_gas = True
+
     def make_param_file(self):
         """Creates a param file for use in ChaNGa."""
         t = self.get_t_out()
@@ -436,25 +444,60 @@ class GalCombine:
     def make_director_file(self):
         """Creates director file for ChaNGa movie output.
          Should set camera to keep entire system in view."""
-        file = open(self.writename + ".director", "w")
         y = 0.5 * self.inital_separation.value + 20
-        L = ["size 1000 1000 \n",
-             "clip 0.001 500 \n",
-             "render tsc \n",
-             "target 0 0 0 \n",
-             "physical \n",
-             "file " + str(self.writename) + " \n",
-             "project perspective \n",
-             "softdark 0.2 \n",
-             "logscale 100000000000 10000000000000000 \n",
-             "colstar 1. 0.3 0. 5e-18 \n",
-             "coldark 0.2 0.2 5 7e-16 \n",
-             "dDumpFrameStep = 25 \n",
-             "iDirector = 1 \n",
-             "gas off \n",
-             "FOV 90 \n",
-             "up 0 1 0 \n",
-             "eye 0. 0. " + str(y) + " \n"]
+
+        if self.use_gas is True:
+            L = ["size 1000 1000 \n",
+                 "clip 0.001 500 \n",
+                 "render tsc \n",
+                 "target 0 0 0 \n",
+                 "physical \n",
+                 "file " + str(self.writename) + " \n",
+                 "project ortho \n",
+                 "softdark 0.2 \n",
+                 "softgas 0.25 \n",
+                 "logscale 100000000000 10000000000000000 \n",
+                 "colstar 1. 0.3 0. 5e-13 \n",
+                 "coldark 0.2 0.2 5 7e-11 \n",
+                 "colgas 0.65 0.9 0.75 5e-12 \n",
+                 "dDumpFrameStep = 25 \n",
+                 "iDirector = 1 \n",
+                 "gas on \n",
+                 "FOV 90 \n",
+                 "up 0 1 0 \n",
+                 "eye 0. 0. " + str(y) + " \n"]
+        else:
+            L = ["size 1000 1000 \n",
+                 "clip 0.001 500 \n",
+                 "render tsc \n",
+                 "target 0 0 0 \n",
+                 "physical \n",
+                 "file " + str(self.writename) + " \n",
+                 "project perspective \n",
+                 "softdark 0.2 \n",
+                 "logscale 100000000000 10000000000000000 \n",
+                 "colstar 1. 0.3 0. 5e-18 \n",
+                 "coldark 0.2 0.2 5 7e-16 \n",
+                 "dDumpFrameStep = 25 \n",
+                 "iDirector = 1 \n",
+                 "gas off \n",
+                 "FOV 90 \n",
+                 "up 0 1 0 \n",
+                 "eye 0. 0. " + str(y) + " \n"]
+
+        file = open(self.writename + ".director", "w")
+        file.writelines(L)
+        file.close()
+
+    def make_log_file(self):
+        """Log"""
+        IC_mass_dm_1 = np.sum(self.Gal1.dm[:]['mass'])
+        IC_mass_s_1 = np.sum(self.Gal1.s[:]['mass'])
+        IC_mass_ = np.sum(HaloTest.g[:]['mass'])
+        totmassHaloTest = dmmassHaloTest + gasmassHaloTest
+        file = open(self.writename + ".log", "w")
+        L = ["Writename = self.writename\n",
+             "Mdyn =  \n"]
 
         file.writelines(L)
         file.close()
