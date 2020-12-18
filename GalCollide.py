@@ -39,6 +39,7 @@ two_bodys = GalCombine(Gal1, Gal2, dDelta,
 two_bodys.make_param_file()
 two_bodys.make_director_file()
 combined = two_bodys.combine()
+two_bodys.make_info_file()
 
 test1 = two_bodys.solve_ivp(Gal1)
 test2 = two_bodys.solve_ivp(Gal2)
