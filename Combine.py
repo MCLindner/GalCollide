@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""Main.py: Description."""
+"""Combine.py: Class for interaction between two galaxies."""
 
 __author__ = "Michael Lindner"
 
@@ -248,7 +248,7 @@ class GalCombine:
         return sol
 
     def _rmat(self, a, b, g):
-        """Docstring"""
+        """Rotation matrix used for transformin galaxies."""
         c_a = np.cos(a)
         c_b = np.cos(b)
         c_g = np.cos(g)
@@ -338,10 +338,6 @@ class GalCombine:
             print("Done")
             print("")
 
-        gal1_shifted.write(filename="temp1.tipsy",
-                           fmt=pynbody.tipsy.TipsySnap,
-                           cosmological=False)
-
         lengths = {}
         for fam in self.Gal2.families():
             lengths[fam.name] = len(self.Gal2[fam])
@@ -381,10 +377,6 @@ class GalCombine:
             print("Done")
             print("")
 
-        gal2_shifted.write(filename="temp2.tipsy",
-                           fmt=pynbody.tipsy.TipsySnap,
-                           cosmological=False)
-
         print("Combining galaxies")
         for fam in gal1_shifted.families():
             lengths[fam.name] = len(gal1_shifted[fam]) + len(gal2_shifted[fam])
@@ -397,6 +389,12 @@ class GalCombine:
             for arname in "pos", "vel", "mass", "rho", "eps":
                 combined[fam][:len(s1)][arname] = s1[arname]
                 combined[fam][len(s1):][arname] = s2[arname]
+            if str(fam) == "gas":
+                combined[fam][:len(s1)]["temp"] = s1["temp"][:]
+                combined[fam][len(s1):]["temp"] = s1["temp"][:]
+                print(combined[fam]["temp"])
+            else:
+                pass
 
         combined.write(filename=self.writename,
                        fmt=pynbody.tipsy.TipsySnap,
@@ -406,13 +404,11 @@ class GalCombine:
 
         return combined
 
-    def check_gas(self):
-        fams1 = self.Gal1.families()
-        fams2 = self.Gal2.families()
-        for fam in fams1 and fams2:
-            if str(fam) == 'gas':
-                print('Using gas')
-                self.use_gas = True
+    def _check_gas(self):
+        """Simply checks whether the simulation will include gas."""
+        if (np.sum(self.Gal1.g[:]['mass'])
+           and np.sum(self.Gal1.g[:]['mass'])) != 0:
+            self.use_gas = True
 
     def make_param_file(self):
         """Creates a param file for use in ChaNGa."""
@@ -445,6 +441,8 @@ class GalCombine:
         """Creates director file for ChaNGa movie output.
          Should set camera to keep entire system in view."""
         y = 0.5 * self.inital_separation.value + 20
+
+        self._check_gas()
 
         if self.use_gas is True:
             L = ["size 1000 1000 \n",
@@ -489,15 +487,40 @@ class GalCombine:
         file.writelines(L)
         file.close()
 
-    def make_log_file(self):
-        """Log"""
+    def make_info_file(self):
+        """Generates a log file for the run."""
+
+        self._check_gas()
+
         IC_mass_dm_1 = np.sum(self.Gal1.dm[:]['mass'])
         IC_mass_s_1 = np.sum(self.Gal1.s[:]['mass'])
-        IC_mass_ = np.sum(HaloTest.g[:]['mass'])
-        totmassHaloTest = dmmassHaloTest + gasmassHaloTest
-        file = open(self.writename + ".log", "w")
+        if self.use_gas is True:
+            IC_mass_g_1 = np.sum(self.Gal1.g[:]['mass'])
+        else:
+            IC_mass_g_1 = 0
+        IC_totmass_1 = IC_mass_dm_1 + IC_mass_g_1 + IC_mass_s_1
+
+        IC_mass_dm_2 = np.sum(self.Gal2.dm[:]['mass'])
+        IC_mass_s_2 = np.sum(self.Gal2.s[:]['mass'])
+        if self.use_gas is True:
+            IC_mass_g_2 = np.sum(self.Gal2.g[:]['mass'])
+        else:
+            IC_mass_g_2 = 0
+        IC_totmass_2 = IC_mass_dm_2 + IC_mass_g_2 + IC_mass_s_2
+
+        file = open(self.writename + ".info", "w")
         L = ["Writename = self.writename\n",
-             "Mdyn =  \n"]
+             "\n",
+             "Gal 1 total mass = " + str(IC_totmass_1) + " \n",
+             "Gal 1 dm mass = " + str(IC_mass_dm_1) + " \n",
+             "Gal 1 star mass = " + str(IC_mass_s_1) + " \n",
+             "Gal 1 gas mass = " + str(IC_mass_g_1) + " \n",
+             "\n",
+             "Gal 2 total mass = " + str(IC_totmass_2) + " \n",
+             "Gal 2 dm mass = " + str(IC_mass_dm_2) + " \n",
+             "Gal 2 star mass = " + str(IC_mass_s_2) + " \n",
+             "Gal 2 gas mass = " + str(IC_mass_g_2) + " \n",
+             ]
 
         file.writelines(L)
         file.close()
