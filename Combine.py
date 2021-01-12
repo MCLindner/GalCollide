@@ -56,7 +56,7 @@ class GalCombine:
         self.d_perigalactic = d_perigalactic * u.kpc
         self.eccentricity = eccentricity
         self.inital_separation = inital_separation * u.kpc
-        self.time = time * u.Myr
+        self.time = (time * u.Myr)
         self.writename = writename
         self.W1 = W1
         self.w1 = w1
@@ -66,10 +66,24 @@ class GalCombine:
         self.i2 = i2
         self.transform = transform
 
+        self.G = const.G
+
+        # simulation units for param file
+        # TODO: find a way to grab from GalactICs
+        self.dMsolUnit = 2.32503e9 * u.solMass
+        self.dKpcUnit = 1 * u.kpc
+        self.timeUnit = 9.7792e6 * u.yr
+        self.velUnit = 100 * u.m / u.s
+
+        # self.dMsolUnit = 2.2222858e5 * u.solMass
+        # self.dKpcUnit = 1 * u.kpc
+        # self.velUnit = .9778 * u.m / u.s
+        # self.timeUnit = 1 * u.Gyr
+
         self.semi_major_axis = (-d_perigalactic / (eccentricity - 1)) * u.kpc
         self.semi_minor_axis = (-d_perigalactic / (eccentricity - 1)
                                 ) * np.sqrt(1 - eccentricity**2) * u.kpc
-        self.G = const.G
+        # Bring in with units, could be a little redundant
         self.Mass1 = float(self.Gal1["mass"].sum().in_units("kg")) * u.kg
         self.Mass2 = float(self.Gal2["mass"].sum().in_units("kg")) * u.kg
         self.m_tot = self.Mass1 + self.Mass2
@@ -112,6 +126,7 @@ class GalCombine:
         parameters passed into the class, would result
         in a Keplerian two-body orbit."""
         # Constants
+        # Problem
         k = np.sqrt(self.G * self.m_tot)
 
         # Derived parameters
@@ -174,6 +189,7 @@ class GalCombine:
 
     def get_period(self):
         """Returns the period of orbit in seconds based on Kepler"s laws."""
+        # Problem
         k = np.sqrt(self.G * self.m_tot)
         a = self.semi_major_axis
         T = np.sqrt(((4 * np.pi**2) / (k**2)) * a**3)
@@ -189,6 +205,7 @@ class GalCombine:
         E1, E2 = self.eccentric_anomalies()
         M1 = E1 - self.eccentricity * np.sin(E1)
         # t - tau = time since first pericenter passage = t_now
+        # Problem
         t_now = M1 / np.sqrt((self.G * self.Mass1) / self.semi_major_axis**3)
         print("tnow:" + str(t_now.to(u.Gyr)))
         print("")
@@ -282,15 +299,18 @@ class GalCombine:
         x1, y1, vx1, vy1 = self._initial_conds(which_gal=self.Gal1)
         x2, y2, vx2, vy2 = self._initial_conds(which_gal=self.Gal2)
 
-        x1 = ((x1).to(u.kpc)).value * (self.Mass1 / self.m_tot)
-        y1 = ((y1).to(u.kpc)).value * (self.Mass1 / self.m_tot)
-        x2 = ((x2).to(u.kpc)).value * (self.Mass2 / self.m_tot)
-        y2 = ((y2).to(u.kpc)).value * (self.Mass2 / self.m_tot)
+        # Mass ratio is unitless so it doesn't matter that they are in kg
+        # Units specified and value taken only because later we use in_units
+        # Only using simulation units to avoid namespace clutter
+        x1 = (x1).to(self.dKpcUnit).value * (self.Mass1 / self.m_tot)
+        y1 = (y1).to(self.dKpcUnit).value * (self.Mass1 / self.m_tot)
+        x2 = (x2).to(self.dKpcUnit).value * (self.Mass2 / self.m_tot)
+        y2 = (y2).to(self.dKpcUnit).value * (self.Mass2 / self.m_tot)
 
-        vx1 = ((vx1).to(.9778 * u.km / u.s)).value * (self.Mass1 / self.m_tot)
-        vy1 = ((vy1).to(.9778 * u.km / u.s)).value * (self.Mass1 / self.m_tot)
-        vx2 = ((vx2).to(.9778 * u.km / u.s)).value * (self.Mass2 / self.m_tot)
-        vy2 = ((vy2).to(.9778 * u.km / u.s)).value * (self.Mass2 / self.m_tot)
+        vx1 = (vx1).to(self.velUnit).value * (self.Mass1 / self.m_tot)
+        vy1 = (vy1).to(self.velUnit).value * (self.Mass1 / self.m_tot)
+        vx2 = (vx2).to(self.velUnit).value * (self.Mass2 / self.m_tot)
+        vy2 = (vy2).to(self.velUnit).value * (self.Mass2 / self.m_tot)
         print("Done")
         print("")
 
@@ -324,10 +344,11 @@ class GalCombine:
                 pass
 
             print("Shifting family " + str(fam))
-            gal1_shifted[fam][:len(s1)]["pos"] = s1["pos"].in_units("kpc") + [x1, y1, 0]
-            gal1_shifted[fam][:len(s1)]["vel"] = s1["vel"].in_units(".9778 km s**-1") + [vx1, vy1, 0]
-            gal1_shifted[fam][:len(s1)]["mass"] = s1["mass"].in_units("2.2222858e5 Msol")
-            gal1_shifted[fam][:len(s1)]["rho"] = s1["rho"].in_units("2.2222858e5 Msol kpc**-3")
+            # in_units here IS needed to ensure units match when added to IC
+            gal1_shifted[fam][:len(s1)]["pos"] = s1["pos"].in_units(str(self.dKpcUnit.value) + " kpc") + [x1, y1, 0]
+            gal1_shifted[fam][:len(s1)]["vel"] = s1["vel"].in_units(str(self.velUnit.value) + " km s**-1") + [vx1, vy1, 0]
+            gal1_shifted[fam][:len(s1)]["mass"] = s1["mass"].in_units(str(self.dMsolUnit.value) + " Msol")
+            gal1_shifted[fam][:len(s1)]["rho"] = s1["rho"].in_units(str((self.dMsolUnit / (self.dKpcUnit**3)).value) + " Msol kpc**-3")
             gal1_shifted[fam][:len(s1)]["eps"] = s1["eps"].in_units("kpc")
 
             if str(fam) == 'gas':
@@ -363,10 +384,11 @@ class GalCombine:
                 pass
 
             print("Shifting family " + str(fam))
-            gal2_shifted[fam][:len(s2)]["pos"] = s2["pos"].in_units("kpc") + [x2, y2, 0]
-            gal2_shifted[fam][:len(s2)]["vel"] = s2["vel"].in_units(".9778 km s**-1") + [vx2, vy2, 0]
-            gal2_shifted[fam][:len(s2)]["mass"] = s2["mass"].in_units("2.2222858e5 Msol")
-            gal2_shifted[fam][:len(s2)]["rho"] = s2["rho"].in_units("2.2222858e5 Msol kpc**-3")
+
+            gal2_shifted[fam][:len(s2)]["pos"] = s2["pos"].in_units(str(self.dKpcUnit.value) + " kpc") + [x2, y2, 0]
+            gal2_shifted[fam][:len(s2)]["vel"] = s2["vel"].in_units(str(self.velUnit.value) + " km s**-1") + [vx2, vy2, 0]
+            gal2_shifted[fam][:len(s2)]["mass"] = s2["mass"].in_units(str(self.dMsolUnit.value) + " Msol")
+            gal2_shifted[fam][:len(s2)]["rho"] = s2["rho"].in_units(str((self.dMsolUnit / (self.dKpcUnit**3)).value) + " Msol kpc**-3")
             gal2_shifted[fam][:len(s2)]["eps"] = s2["eps"].in_units("kpc")
 
             if str(fam) == 'g':
@@ -413,8 +435,8 @@ class GalCombine:
     def make_param_file(self):
         """Creates a param file for use in ChaNGa."""
         t = self.get_t_out()
-        t_gyears = t.to(u.Gyr)
-        t_steps = t_gyears / self.dDelta
+        t_timeunits = t.to(self.timeUnit)
+        t_steps = t_timeunits / self.dDelta
 
         print("t_steps = " + str(t_steps))
         achInFile = self.writename
@@ -429,10 +451,11 @@ class GalCombine:
              "achInFile = " + achInFile + " \n",
              "achOutName = " + self.writename + " \n",
              "iLogInterval = 1 \n",
-             "dMsolUnit = 2.2222858e5 \n",
-             "dKpcUnit = 1 \n",
+             "dMsolUnit = " + str(self.dMsolUnit) + " \n",
+             "dKpcUnit = " + str(self.dKpcUnit) + " \n",
              "dDumpFrameStep = 25 \n",
-             "iDirector = 1 \n"]
+             "iDirector = 1 \n",
+             "bGasAdiabatic = 1"]
 
         file.writelines(L)
         file.close()
@@ -520,6 +543,11 @@ class GalCombine:
              "Gal 2 dm mass = " + str(IC_mass_dm_2) + " \n",
              "Gal 2 star mass = " + str(IC_mass_s_2) + " \n",
              "Gal 2 gas mass = " + str(IC_mass_g_2) + " \n",
+             "\n",
+             "Mass unit = " + str(self.dMsolUnit) + " \n",
+             "Length unit = " + str(self.dKpcUnit) + " \n",
+             "Time unit = " + str(self.timeUnit) + " \n",
+             "Velocity unit= " + str(self.velUnit) + " \n"
              ]
 
         file.writelines(L)
