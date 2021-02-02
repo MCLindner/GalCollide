@@ -3,8 +3,8 @@
 import pynbody
 
 # Paths to tipsy files for galaxy models
-Gal1 = pynbody.load('./InitialConditions/GasHaloICV3')
-Gal2 = pynbody.load('./InitialConditions/GasHaloICV3')
+Gal1 = pynbody.load('./InitialConditions/GasHaloICV4')
+Gal2 = pynbody.load('./InitialConditions/GasHaloICV4')
 
 # dDelta for changa param file
 dDelta = .01
@@ -22,7 +22,7 @@ eccentricity = 0.99
 time = 175
 
 # Output file name
-writename = "MiceGasHaloV3"
+writename = "MiceGasHaloV4"
 
 # Euler angles to transform each galaxy by
 W1, w1, i1 = 0, 4.10152, 0.261799
