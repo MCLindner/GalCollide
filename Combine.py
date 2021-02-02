@@ -126,7 +126,6 @@ class GalCombine:
         parameters passed into the class, would result
         in a Keplerian two-body orbit."""
         # Constants
-        # Problem
         k = np.sqrt(self.G * self.m_tot)
 
         # Derived parameters
@@ -189,7 +188,6 @@ class GalCombine:
 
     def get_period(self):
         """Returns the period of orbit in seconds based on Kepler"s laws."""
-        # Problem
         k = np.sqrt(self.G * self.m_tot)
         a = self.semi_major_axis
         T = np.sqrt(((4 * np.pi**2) / (k**2)) * a**3)
@@ -205,7 +203,6 @@ class GalCombine:
         E1, E2 = self.eccentric_anomalies()
         M1 = E1 - self.eccentricity * np.sin(E1)
         # t - tau = time since first pericenter passage = t_now
-        # Problem
         t_now = M1 / np.sqrt((self.G * self.Mass1) / self.semi_major_axis**3)
         print("tnow:" + str(t_now.to(u.Gyr)))
         print("")
@@ -477,13 +474,13 @@ class GalCombine:
                  "project ortho \n",
                  "softdark 0.2 \n",
                  "softgas 0.25 \n",
+                 "softgassph \n",
                  "logscale 100000000000 10000000000000000 \n",
-                 "colstar 1. 0.3 0. 5e-13 \n",
-                 "coldark 0.2 0.2 5 7e-11 \n",
-                 "colgas 0.65 0.9 0.75 5e-12 \n",
+                 "colstar 1. 0.3 0. 7e-22 \n",
+                 "coldark 0.2 0.2 5 4e-20 \n",
+                 "colgas 168 54 50 1e-18 \n",
                  "dDumpFrameStep = 25 \n",
                  "iDirector = 1 \n",
-                 "gas on \n",
                  "FOV 90 \n",
                  "up 0 1 0 \n",
                  "eye 0. 0. " + str(y) + " \n"]
@@ -511,7 +508,7 @@ class GalCombine:
         file.close()
 
     def make_info_file(self):
-        """Generates a log file for the run."""
+        """Generates a log file for the run with info on galaxy composition."""
 
         self._check_gas()
 
