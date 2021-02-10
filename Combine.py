@@ -73,7 +73,7 @@ class GalCombine:
         self.dMsolUnit = 2.32503e9 * u.solMass
         self.dKpcUnit = 1 * u.kpc
         self.timeUnit = 9.7792e6 * u.yr
-        self.velUnit = 100 * u.m / u.s
+        self.velUnit = 100 * u.km / u.s
 
         # self.dMsolUnit = 2.2222858e5 * u.solMass
         # self.dKpcUnit = 1 * u.kpc
@@ -448,8 +448,8 @@ class GalCombine:
              "achInFile = " + achInFile + " \n",
              "achOutName = " + self.writename + " \n",
              "iLogInterval = 1 \n",
-             "dMsolUnit = " + str(self.dMsolUnit) + " \n",
-             "dKpcUnit = " + str(self.dKpcUnit) + " \n",
+             "dMsolUnit = " + str(self.dMsolUnit.value) + " \n",
+             "dKpcUnit = " + str(self.dKpcUnit.value) + " \n",
              "dDumpFrameStep = 25 \n",
              "iDirector = 1 \n",
              "bGasAdiabatic = 1"]
