@@ -88,6 +88,8 @@ class GalCombine:
         self.Mass2 = float(self.Gal2["mass"].sum().in_units("kg")) * u.kg
         self.m_tot = self.Mass1 + self.Mass2
 
+        self.use_gas = False
+
     def eccentric_anomalies(self):
         """Uses scipy.optimize.brenq to find the eccentric anomalies of
         each of the galaxies in the system given the input parameters."""
