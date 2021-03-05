@@ -42,17 +42,14 @@ zmat = np.matrix([[c_z,  s_z,  0.0],
 tmp1 = np.matmul(xmat, ymat)
 rmat = np.matmul(zmat, tmp1)
 
-MP = L * rmat
-MV = V * rmat
-
 
 def transformP(row):
-    row = (MP * np.matrix(row).transpose())
+    row = (rmat * np.matrix(row).transpose())
     return(row)
 
 
 def transformV(row):
-    row = (MV * np.matrix(row).transpose())
+    row = (rmat * np.matrix(row).transpose())
     return(row)
 
 
@@ -70,9 +67,9 @@ for fam in snapshot.families():
     snap_fam['vel'] = np.apply_along_axis(transformV, 1, snap_fam['vel'])
 
     scaled_snapshot[fam][:len(snap_fam)]['pos'] = snap_fam['pos'].in_units('kpc')
-    scaled_snapshot[fam][:len(snap_fam)]['vel'] = snap_fam['vel'].in_units('.9778 km s**-1')
-    scaled_snapshot[fam][:len(snap_fam)]['mass'] = snap_fam['mass'].in_units('2.2222858e5 Msol')
-    scaled_snapshot[fam][:len(snap_fam)]['rho'] = snap_fam['rho'].in_units('2.2222858e5 Msol kpc**-3')
+    scaled_snapshot[fam][:len(snap_fam)]['vel'] = snap_fam['vel'].in_units('100 km s**-1')
+    scaled_snapshot[fam][:len(snap_fam)]['mass'] = snap_fam['mass'].in_units('2.32503e9 Msol')
+    scaled_snapshot[fam][:len(snap_fam)]['rho'] = snap_fam['rho'].in_units('2.32503e9 Msol kpc**-3')
     scaled_snapshot[fam][:len(snap_fam)]['eps'] = snap_fam['eps'].in_units('kpc')
 
 scaled_snapshot.s['tform'] = snapshot.s['tform']

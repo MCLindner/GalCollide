@@ -49,7 +49,7 @@ class GalCombine:
 
     def __init__(self, Gal1, Gal2, dDelta,
                  d_perigalactic, inital_separation, eccentricity, time,
-                 writename, W1, w1, i1, W2, w2, i2, transform):
+                 mDyn, writename, W1, w1, i1, W2, w2, i2, transform):
         self.Gal1 = Gal1
         self.Gal2 = Gal2
         self.dDelta = dDelta
@@ -89,6 +89,10 @@ class GalCombine:
         self.m_tot = self.Mass1 + self.Mass2
 
         self.use_gas = False
+
+        self.mDyn = mDyn
+
+        self.massScale = self.mDyn / self.m_tot.value
 
     def eccentric_anomalies(self):
         """Uses scipy.optimize.brenq to find the eccentric anomalies of
@@ -345,13 +349,13 @@ class GalCombine:
             print("Shifting family " + str(fam))
             # in_units here IS needed to ensure units match when added to IC
             gal1_shifted[fam][:len(s1)]["pos"] = s1["pos"].in_units(str(self.dKpcUnit.value) + " kpc") + [x1, y1, 0]
-            gal1_shifted[fam][:len(s1)]["vel"] = s1["vel"].in_units(str(self.velUnit.value) + " km s**-1") + [vx1, vy1, 0]
-            gal1_shifted[fam][:len(s1)]["mass"] = s1["mass"].in_units(str(self.dMsolUnit.value) + " Msol")
+            gal1_shifted[fam][:len(s1)]["vel"] = s1["vel"].in_units(str(self.velUnit.value * np.sqrt(self.massScale)) + " km s**-1") + [vx1, vy1, 0]
+            gal1_shifted[fam][:len(s1)]["mass"] = s1["mass"].in_units(str(self.dMsolUnit.value * self.massScale) + " Msol")
             gal1_shifted[fam][:len(s1)]["rho"] = s1["rho"].in_units(str((self.dMsolUnit / (self.dKpcUnit**3)).value) + " Msol kpc**-3")
             gal1_shifted[fam][:len(s1)]["eps"] = s1["eps"].in_units("kpc")
 
             if str(fam) == 'gas':
-                gal1_shifted[fam][:len(s1)]["temp"] = s1["temp"]
+                gal1_shifted[fam][:len(s1)]["temp"] = s1["temp"] * self.massScale
             else:
                 pass
 
@@ -385,13 +389,13 @@ class GalCombine:
             print("Shifting family " + str(fam))
 
             gal2_shifted[fam][:len(s2)]["pos"] = s2["pos"].in_units(str(self.dKpcUnit.value) + " kpc") + [x2, y2, 0]
-            gal2_shifted[fam][:len(s2)]["vel"] = s2["vel"].in_units(str(self.velUnit.value) + " km s**-1") + [vx2, vy2, 0]
-            gal2_shifted[fam][:len(s2)]["mass"] = s2["mass"].in_units(str(self.dMsolUnit.value) + " Msol")
+            gal2_shifted[fam][:len(s2)]["vel"] = s2["vel"].in_units(str(self.velUnit.value * np.sqrt(self.massScale)) + " km s**-1") + [vx2, vy2, 0]
+            gal2_shifted[fam][:len(s2)]["mass"] = s2["mass"].in_units(str(self.dMsolUnit.value * self.massScale) + " Msol")
             gal2_shifted[fam][:len(s2)]["rho"] = s2["rho"].in_units(str((self.dMsolUnit / (self.dKpcUnit**3)).value) + " Msol kpc**-3")
             gal2_shifted[fam][:len(s2)]["eps"] = s2["eps"].in_units("kpc")
 
             if str(fam) == 'g':
-                gal2_shifted[fam][:len(s2)]["temp"] = s2["temp"]
+                gal2_shifted[fam][:len(s2)]["temp"] = s2["temp"] * self.massScale
             else:
                 pass
 
