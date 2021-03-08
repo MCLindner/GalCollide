@@ -8,8 +8,6 @@ import pynbody
 import numpy as np
 import ObservationParameters as p
 
-L = p.L
-V = p.V
 snapshot = p.snapshot
 
 # Rotate from simulation coordinates to observation coordinates
