@@ -45,6 +45,9 @@ class GalCombine:
 
     solve_ivp(): tests that the initial condition is
      correct by solving the two body problem.
+
+
+     Should I just scale the final output or should I scale all of the IC vels
     """
 
     def __init__(self, Gal1, Gal2, dDelta,
@@ -209,7 +212,8 @@ class GalCombine:
         E1, E2 = self.eccentric_anomalies()
         M1 = E1 - self.eccentricity * np.sin(E1)
         # t - tau = time since first pericenter passage = t_now
-        t_now = M1 / np.sqrt((self.G * self.Mass1) / self.semi_major_axis**3)
+        # scaled mass here
+        t_now = M1 / np.sqrt((self.G * self.Mass1 * self.massScale) / self.semi_major_axis**3)
         print("tnow:" + str(t_now.to(u.Gyr)))
         print("")
         t_since_passage_obs = (self.time).to(u.s)
@@ -351,7 +355,7 @@ class GalCombine:
             gal1_shifted[fam][:len(s1)]["pos"] = s1["pos"].in_units(str(self.dKpcUnit.value) + " kpc") + [x1, y1, 0]
             gal1_shifted[fam][:len(s1)]["vel"] = s1["vel"].in_units(str(self.velUnit.value * np.sqrt(self.massScale)) + " km s**-1") + [vx1, vy1, 0]
             gal1_shifted[fam][:len(s1)]["mass"] = s1["mass"].in_units(str(self.dMsolUnit.value * self.massScale) + " Msol")
-            gal1_shifted[fam][:len(s1)]["rho"] = s1["rho"].in_units(str((self.dMsolUnit / (self.dKpcUnit**3)).value) + " Msol kpc**-3")
+            gal1_shifted[fam][:len(s1)]["rho"] = s1["rho"].in_units(str((self.dMsolUnit * self.massScale / (self.dKpcUnit**3)).value) + " Msol kpc**-3")
             gal1_shifted[fam][:len(s1)]["eps"] = s1["eps"].in_units("kpc")
 
             if str(fam) == 'gas':
@@ -391,7 +395,7 @@ class GalCombine:
             gal2_shifted[fam][:len(s2)]["pos"] = s2["pos"].in_units(str(self.dKpcUnit.value) + " kpc") + [x2, y2, 0]
             gal2_shifted[fam][:len(s2)]["vel"] = s2["vel"].in_units(str(self.velUnit.value * np.sqrt(self.massScale)) + " km s**-1") + [vx2, vy2, 0]
             gal2_shifted[fam][:len(s2)]["mass"] = s2["mass"].in_units(str(self.dMsolUnit.value * self.massScale) + " Msol")
-            gal2_shifted[fam][:len(s2)]["rho"] = s2["rho"].in_units(str((self.dMsolUnit / (self.dKpcUnit**3)).value) + " Msol kpc**-3")
+            gal2_shifted[fam][:len(s2)]["rho"] = s2["rho"].in_units(str((self.dMsolUnit * self.massScale / (self.dKpcUnit**3)).value) + " Msol kpc**-3")
             gal2_shifted[fam][:len(s2)]["eps"] = s2["eps"].in_units("kpc")
 
             if str(fam) == 'g':
