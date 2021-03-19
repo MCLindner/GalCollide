@@ -97,6 +97,10 @@ class GalCombine:
 
         self.massScale = self.mDyn / self.m_tot.value
 
+        self.Mass1_scaled = self.Mass1 * self.massScale
+        self.Mass2_scaled = self.Mass2 * self.massScale
+        self.m_tot_scaled = self.Mass1_scaled + self.Mass2_scaled
+
     def eccentric_anomalies(self):
         """Uses scipy.optimize.brenq to find the eccentric anomalies of
         each of the galaxies in the system given the input parameters."""
@@ -135,7 +139,7 @@ class GalCombine:
         parameters passed into the class, would result
         in a Keplerian two-body orbit."""
         # Constants
-        k = np.sqrt(self.G * self.m_tot)
+        k = np.sqrt(self.G * self.m_tot_scaled)
 
         # Derived parameters
         n = k * self.semi_major_axis**(-3 / 2)
@@ -185,8 +189,8 @@ class GalCombine:
         vy2 = q2 * vY2
 
         # Check that the center of mass is as it should be
-        self.xcom = (x1 * self.Mass1 + x2 * self.Mass2) / self.m_tot
-        self.ycom = (y1 * self.Mass1 + y2 * self.Mass2) / self.m_tot
+        self.xcom = (x1 * self.Mass1_scaled + x2 * self.Mass2_scaled) / self.m_tot_scaled
+        self.ycom = (y1 * self.Mass1_scaled + y2 * self.Mass2_scaled) / self.m_tot_scaled
         print("xcom = " + str(self.xcom))
         print("ycom = " + str(self.ycom))
 
@@ -197,7 +201,7 @@ class GalCombine:
 
     def get_period(self):
         """Returns the period of orbit in seconds based on Kepler"s laws."""
-        k = np.sqrt(self.G * self.m_tot)
+        k = np.sqrt(self.G * self.m_tot_scaled)
         a = self.semi_major_axis
         T = np.sqrt(((4 * np.pi**2) / (k**2)) * a**3)
         print("T:" + str(T.decompose()))
@@ -213,7 +217,7 @@ class GalCombine:
         M1 = E1 - self.eccentricity * np.sin(E1)
         # t - tau = time since first pericenter passage = t_now
         # scaled mass here
-        t_now = M1 / np.sqrt((self.G * self.Mass1 * self.massScale) / self.semi_major_axis**3)
+        t_now = M1 / np.sqrt((self.G * self.Mass1_scaled) / self.semi_major_axis**3)
         print("tnow:" + str(t_now.to(u.Gyr)))
         print("")
         t_since_passage_obs = (self.time).to(u.s)
@@ -244,8 +248,8 @@ class GalCombine:
 
         du1 = p[2]
         du2 = p[3]
-        du3 = -(((self.G * self.m_tot).value) / r**3) * (p[0])
-        du4 = -(((self.G * self.m_tot).value) / r**3) * (p[1])
+        du3 = -(((self.G * self.m_tot_scaled).value) / r**3) * (p[0])
+        du4 = -(((self.G * self.m_tot_scaled).value) / r**3) * (p[1])
 
         return [du1, du2, du3, du4]
 
@@ -272,7 +276,7 @@ class GalCombine:
         return sol
 
     def _rmat(self, a, b, g):
-        """Rotation matrix used for transformin galaxies."""
+        """Rotation matrix used for transforming galaxies."""
         c_a = np.cos(a)
         c_b = np.cos(b)
         c_g = np.cos(g)
@@ -309,15 +313,15 @@ class GalCombine:
         # Mass ratio is unitless so it doesn't matter that they are in kg
         # Units specified and value taken only because later we use in_units
         # Only using simulation units to avoid namespace clutter
-        x1 = (x1).to(self.dKpcUnit).value * (self.Mass1 / self.m_tot)
-        y1 = (y1).to(self.dKpcUnit).value * (self.Mass1 / self.m_tot)
-        x2 = (x2).to(self.dKpcUnit).value * (self.Mass2 / self.m_tot)
-        y2 = (y2).to(self.dKpcUnit).value * (self.Mass2 / self.m_tot)
+        x1 = (x1).to(self.dKpcUnit).value * (self.Mass1_scaled / self.m_tot_scaled)
+        y1 = (y1).to(self.dKpcUnit).value * (self.Mass1_scaled / self.m_tot_scaled)
+        x2 = (x2).to(self.dKpcUnit).value * (self.Mass2_scaled / self.m_tot_scaled)
+        y2 = (y2).to(self.dKpcUnit).value * (self.Mass2_scaled / self.m_tot_scaled)
 
-        vx1 = (vx1).to(self.velUnit).value * (self.Mass1 / self.m_tot)
-        vy1 = (vy1).to(self.velUnit).value * (self.Mass1 / self.m_tot)
-        vx2 = (vx2).to(self.velUnit).value * (self.Mass2 / self.m_tot)
-        vy2 = (vy2).to(self.velUnit).value * (self.Mass2 / self.m_tot)
+        vx1 = (vx1).to(self.velUnit).value * (self.Mass1_scaled / self.m_tot_scaled)
+        vy1 = (vy1).to(self.velUnit).value * (self.Mass1_scaled / self.m_tot_scaled)
+        vx2 = (vx2).to(self.velUnit).value * (self.Mass2_scaled / self.m_tot_scaled)
+        vy2 = (vy2).to(self.velUnit).value * (self.Mass2_scaled / self.m_tot_scaled)
         print("Done")
         print("")
 
@@ -419,6 +423,7 @@ class GalCombine:
                 combined[fam][:len(s1)][arname] = s1[arname]
                 combined[fam][len(s1):][arname] = s2[arname]
             if str(fam) == "gas":
+                # temp starts out uniform
                 combined[fam][:len(s1)]["temp"] = s1["temp"][:]
                 combined[fam][len(s1):]["temp"] = s1["temp"][:]
                 print(combined[fam]["temp"])

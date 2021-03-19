@@ -24,7 +24,7 @@ time = 175
 mDyn = 1.312687200755e+42
 
 # Output file name
-writename = "MiceScaledMass"
+writename = "MiceScaledMassV3"
 
 # Euler angles to transform each galaxy by
 W1, w1, i1 = 0, 4.10152, 0.261799
