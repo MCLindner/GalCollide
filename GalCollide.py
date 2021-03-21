@@ -60,6 +60,7 @@ ax[0].plot(test1['t'], y1)
 ax[1].plot(test2['t'], y2)
 ax[0].set_ylabel('y')
 ax[0].set_xlabel('t')
+plt.savefig("./Images/TwoBodyYt_img")
 
 fig, ax = plt.subplots(figsize=(15, 15))
 
@@ -70,4 +71,5 @@ ax.scatter(x1[0], y1[0], c='g')
 ax.scatter(x2[0], y2[0], c='g')
 ax.scatter(x1[1:50], y1[1:50], c='b')
 ax.scatter(x2[1:50], y2[1:50], c='r')
+plt.savefig("./Images/TwoBodyXY_img")
 plt.show()
