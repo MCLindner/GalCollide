@@ -14,42 +14,87 @@ import astropy.constants as const
 
 class GalCombine:
     """
-    Create an initial condition for two galaxies in a Kepler orbit.
-    Attributes:
-    Gal1, PyNBody TipsySnap
-    Gal2, PyNbody TipsySnap
-    dDelta = dDelta for changa param file
-    d_perigalactic = perigalactic distance given in kpc
-    initial_separation = initial separation distance between galaxies in kpc
-    eccentricity = eccentricity of the system
-    time = time since (or until) first perigalacticon passage in Myr
-    writename = output file name (string)
-    W1, w1, i1 = Euler angles for galaxy 1
-    W2, w2, i2 = Euler angles for galaxy 2
-    transform = Bool, whether or not to transform each galaxy by Euler angles
+    Create an initial condition for two galaxies in a Keplerian orbit.
 
-    Public methods:
-    eccentric_anomalies():
+    Attributes
+    ----------
+    Gal1 : PyNBody TipsySnap
+        Tipsy snapshot of first galaxy model.
 
-    calculate_ICs():
+    Gal2 : PyNbody TipsySnap
+        Tipsy snapshot of second galaxy model.
 
-    combine(): generates the initial condition tipsy file
+    dDelta : float/int
+        dDelta for changa param file.
 
-    get_period(): gets the period of the orbit of the system
+    d_perigalactic : float/int
+        Perigalactic distance given in kpc.
 
-    get_t_out():
+    initial_separation : float/int
+        Initial separation distance between galaxies in kpc
 
-    make_param_file(): creates the param file for changa
+    eccentricity : float/int
+        Eccentricity of the system.
 
-    make_director_file(): creates the director file for changa movie output
+    time : float/int
+        Time since (or until if negative) first perigalacticon passage in Myr.
 
-    solve_ivp(): tests that the initial condition is
-     correct by solving the two body problem.
+    mDyn : float/int
+        Desired dynamical mass of the system given in kg.
+
+    writename : string
+        Output file name.
+
+    W1, w1, i1 : float/int
+        Euler angles for galaxy 1.
+
+    W2, w2, i2 : float/int
+        Euler angles for galaxy 2.
+
+    transform : Boolean
+        Whether or not to transform each galaxy by Euler angles.
+
+    Public methods
+    ----------
+    eccentric_anomalies() :
+
+    calculate_ICs() :
+        Calculates intial positions and velocies of galaxies to place them on a
+        Keplerian orbit as specified by perigalactic distance, initial
+        separation,eccentricity, the mass of the galaxies, and time since first
+        perigalactivon passage.
+
+    combine() :
+        Generates the initial condition tipsy file by combining galaxy
+        models with initial positions and velocites given by calculate_ICs().
+
+    get_period() :
+        Gets the period of the orbit of the system based upon orbital
+        parameters.
+
+    get_t_out() :
+        First calculates how long it has been since first perigalacticon
+        passage at the time of the initial snapshot, then calculates the
+        output time for the simulation.
+
+    make_param_file() :
+        Creates the param file for use in ChaNGa.
+
+    make_director_file() :
+        Creates the director file for changa movie output. If gas is used
+        changes director file appropriately.
+
+    make_info_file() :
+
+    solve_ivp() :
+        Tests that the initial condition is
+        correct by solving the two body problem.
+
     """
 
     def __init__(self, Gal1, Gal2, dDelta,
                  d_perigalactic, inital_separation, eccentricity, time,
-                 writename, W1, w1, i1, W2, w2, i2, transform):
+                 mDyn, writename, W1, w1, i1, W2, w2, i2, transform):
         self.Gal1 = Gal1
         self.Gal2 = Gal2
         self.dDelta = dDelta
@@ -75,11 +120,6 @@ class GalCombine:
         self.timeUnit = 9.7792e6 * u.yr
         self.velUnit = 100 * u.km / u.s
 
-        # self.dMsolUnit = 2.2222858e5 * u.solMass
-        # self.dKpcUnit = 1 * u.kpc
-        # self.velUnit = .9778 * u.m / u.s
-        # self.timeUnit = 1 * u.Gyr
-
         self.semi_major_axis = (-d_perigalactic / (eccentricity - 1)) * u.kpc
         self.semi_minor_axis = (-d_perigalactic / (eccentricity - 1)
                                 ) * np.sqrt(1 - eccentricity**2) * u.kpc
@@ -90,9 +130,24 @@ class GalCombine:
 
         self.use_gas = False
 
+        self.mDyn = mDyn
+
+        self.massScale = self.mDyn / self.m_tot.value
+
+        self.Mass1_scaled = self.Mass1 * self.massScale
+        self.Mass2_scaled = self.Mass2 * self.massScale
+        self.m_tot_scaled = self.Mass1_scaled + self.Mass2_scaled
+
     def eccentric_anomalies(self):
-        """Uses scipy.optimize.brenq to find the eccentric anomalies of
-        each of the galaxies in the system given the input parameters."""
+        """
+        Uses scipy.optimize.brenq to find the eccentric anomalies of
+        each of the galaxies in the system given the input parameters.
+
+        Returns
+        ----------
+
+        E1, E2 : float
+        """
         def f(E, a, b, e, r):
             return ((np.sqrt((a * (np.cos(E) - e))**2 + (b * np.sin(E))**2) - r)).value
 
@@ -124,11 +179,25 @@ class GalCombine:
         return E1, E2
 
     def calculate_ICs(self, which_gal):
-        """Finds the velocity componants in cartesian that, given the
+        """
+        Finds the velocity componants in cartesian that, given the
         parameters passed into the class, would result
-        in a Keplerian two-body orbit."""
+        in a Keplerian two-body orbit.
+
+        Parameters
+        ----------
+
+        Returns
+        ----------
+        x1, y1, vx1, vy1 : float
+
+        or
+
+        x1, y1, vx1, vy1 : float
+
+        """
         # Constants
-        k = np.sqrt(self.G * self.m_tot)
+        k = np.sqrt(self.G * self.m_tot_scaled)
 
         # Derived parameters
         n = k * self.semi_major_axis**(-3 / 2)
@@ -178,8 +247,8 @@ class GalCombine:
         vy2 = q2 * vY2
 
         # Check that the center of mass is as it should be
-        self.xcom = (x1 * self.Mass1 + x2 * self.Mass2) / self.m_tot
-        self.ycom = (y1 * self.Mass1 + y2 * self.Mass2) / self.m_tot
+        self.xcom = (x1 * self.Mass1_scaled + x2 * self.Mass2_scaled) / self.m_tot_scaled
+        self.ycom = (y1 * self.Mass1_scaled + y2 * self.Mass2_scaled) / self.m_tot_scaled
         print("xcom = " + str(self.xcom))
         print("ycom = " + str(self.ycom))
 
@@ -189,8 +258,15 @@ class GalCombine:
             return x2, y2, vx2, vy2
 
     def get_period(self):
-        """Returns the period of orbit in seconds based on Kepler"s laws."""
-        k = np.sqrt(self.G * self.m_tot)
+        """
+        Returns the period of orbit in seconds based on Kepler"s laws.
+
+        Returns
+        ----------
+
+        T : float
+        """
+        k = np.sqrt(self.G * self.m_tot_scaled)
         a = self.semi_major_axis
         T = np.sqrt(((4 * np.pi**2) / (k**2)) * a**3)
         print("T:" + str(T.decompose()))
@@ -199,13 +275,19 @@ class GalCombine:
         return T
 
     def get_t_out(self):
-        """Finds t_out, the ammount the time in seconds that the galaxies orbit
-         until they reach time since first perigalacticon passage  given
-         in Parameters.py. Used to determine NSteps in make_param_file()"""
+        """
+        Finds t_out, the ammount the time in seconds that the galaxies orbit
+        until they reach time since first perigalacticon passage  given
+        in Parameters.py. Used to determine NSteps in make_param_file()
+
+        Returns
+        ----------
+        """
         E1, E2 = self.eccentric_anomalies()
         M1 = E1 - self.eccentricity * np.sin(E1)
         # t - tau = time since first pericenter passage = t_now
-        t_now = M1 / np.sqrt((self.G * self.Mass1) / self.semi_major_axis**3)
+        # scaled mass here
+        t_now = M1 / np.sqrt((self.G * self.Mass1_scaled) / self.semi_major_axis**3)
         print("tnow:" + str(t_now.to(u.Gyr)))
         print("")
         t_since_passage_obs = (self.time).to(u.s)
@@ -214,8 +296,16 @@ class GalCombine:
         return t_out
 
     def _initial_conds(self, which_gal):
-        """Returns the initial positions and velocities for galaxy given
-         by which_gal. Utility function."""
+        """
+        Returns the initial positions and velocities for galaxy given
+        by which_gal. Utility function.
+
+        Parameters
+        ----------
+
+        Returns
+        ----------
+        """
         x, y, vx, vy = self.calculate_ICs(which_gal)
         print(str(which_gal) + ": x,y,vx,vy = " + str((x, y, vx.decompose(),
                                                        vy.decompose())))
@@ -224,8 +314,16 @@ class GalCombine:
         return x, y, vx, vy
 
     def _equations(self, t, p):
-        """Splits second order diff eqquations of motion into four
-         first order differential equations."""
+        """
+        Splits second order diff eqquations of motion into four
+        first order differential equations.
+
+        Parameters
+        ----------
+
+        Returns
+        ----------
+        """
         r = np.sqrt((p[0])**2 + (p[1])**2)
 
         # Split the diff EQs
@@ -236,14 +334,22 @@ class GalCombine:
 
         du1 = p[2]
         du2 = p[3]
-        du3 = -(((self.G * self.m_tot).value) / r**3) * (p[0])
-        du4 = -(((self.G * self.m_tot).value) / r**3) * (p[1])
+        du3 = -(((self.G * self.m_tot_scaled).value) / r**3) * (p[0])
+        du4 = -(((self.G * self.m_tot_scaled).value) / r**3) * (p[1])
 
         return [du1, du2, du3, du4]
 
     def solve_ivp(self, which_gal):
-        """Test that the initial condition is correct by
-         solving the two-body problem for the system."""
+        """
+        Test that the initial condition is correct by solving
+        the two-body problem for the system.
+
+        Parameters
+        ----------
+
+        Returns
+        ----------
+        """
         nsteps = 10000
         period = self.get_period().to(u.s).value
         t_eval = np.linspace(0, period, nsteps)
@@ -264,7 +370,15 @@ class GalCombine:
         return sol
 
     def _rmat(self, a, b, g):
-        """Rotation matrix used for transformin galaxies."""
+        """
+        Rotation matrix used for transforming galaxies.
+
+        Parameters
+        ----------
+
+        Returns
+        ----------
+        """
         c_a = np.cos(a)
         c_b = np.cos(b)
         c_g = np.cos(g)
@@ -291,8 +405,12 @@ class GalCombine:
         return rmat
 
     def combine(self):
-        """Combines the two galaxies into a new TipsySnap.
-         Massunit = 2.2222858e5 Msol. Length unit = 1 kpc."""
+        """
+        Combines the two galaxies into a new TipsySnap.
+
+        Returns
+        ----------
+        """
         # these x y z refer to initial condit to be added
         print("Getting initial conditions")
         x1, y1, vx1, vy1 = self._initial_conds(which_gal=self.Gal1)
@@ -301,15 +419,15 @@ class GalCombine:
         # Mass ratio is unitless so it doesn't matter that they are in kg
         # Units specified and value taken only because later we use in_units
         # Only using simulation units to avoid namespace clutter
-        x1 = (x1).to(self.dKpcUnit).value * (self.Mass1 / self.m_tot)
-        y1 = (y1).to(self.dKpcUnit).value * (self.Mass1 / self.m_tot)
-        x2 = (x2).to(self.dKpcUnit).value * (self.Mass2 / self.m_tot)
-        y2 = (y2).to(self.dKpcUnit).value * (self.Mass2 / self.m_tot)
+        x1 = (x1).to(self.dKpcUnit).value * (self.Mass1_scaled / self.m_tot_scaled)
+        y1 = (y1).to(self.dKpcUnit).value * (self.Mass1_scaled / self.m_tot_scaled)
+        x2 = (x2).to(self.dKpcUnit).value * (self.Mass2_scaled / self.m_tot_scaled)
+        y2 = (y2).to(self.dKpcUnit).value * (self.Mass2_scaled / self.m_tot_scaled)
 
-        vx1 = (vx1).to(self.velUnit).value * (self.Mass1 / self.m_tot)
-        vy1 = (vy1).to(self.velUnit).value * (self.Mass1 / self.m_tot)
-        vx2 = (vx2).to(self.velUnit).value * (self.Mass2 / self.m_tot)
-        vy2 = (vy2).to(self.velUnit).value * (self.Mass2 / self.m_tot)
+        vx1 = (vx1).to(self.velUnit).value * (self.Mass1_scaled / self.m_tot_scaled)
+        vy1 = (vy1).to(self.velUnit).value * (self.Mass1_scaled / self.m_tot_scaled)
+        vx2 = (vx2).to(self.velUnit).value * (self.Mass2_scaled / self.m_tot_scaled)
+        vy2 = (vy2).to(self.velUnit).value * (self.Mass2_scaled / self.m_tot_scaled)
         print("Done")
         print("")
 
@@ -345,13 +463,13 @@ class GalCombine:
             print("Shifting family " + str(fam))
             # in_units here IS needed to ensure units match when added to IC
             gal1_shifted[fam][:len(s1)]["pos"] = s1["pos"].in_units(str(self.dKpcUnit.value) + " kpc") + [x1, y1, 0]
-            gal1_shifted[fam][:len(s1)]["vel"] = s1["vel"].in_units(str(self.velUnit.value) + " km s**-1") + [vx1, vy1, 0]
-            gal1_shifted[fam][:len(s1)]["mass"] = s1["mass"].in_units(str(self.dMsolUnit.value) + " Msol")
-            gal1_shifted[fam][:len(s1)]["rho"] = s1["rho"].in_units(str((self.dMsolUnit / (self.dKpcUnit**3)).value) + " Msol kpc**-3")
+            gal1_shifted[fam][:len(s1)]["vel"] = s1["vel"].in_units(str(self.velUnit.value * np.sqrt(self.massScale)) + " km s**-1") + [vx1, vy1, 0]
+            gal1_shifted[fam][:len(s1)]["mass"] = s1["mass"].in_units(str(self.dMsolUnit.value * self.massScale) + " Msol")
+            gal1_shifted[fam][:len(s1)]["rho"] = s1["rho"].in_units(str((self.dMsolUnit * self.massScale / (self.dKpcUnit**3)).value) + " Msol kpc**-3")
             gal1_shifted[fam][:len(s1)]["eps"] = s1["eps"].in_units("kpc")
 
             if str(fam) == 'gas':
-                gal1_shifted[fam][:len(s1)]["temp"] = s1["temp"]
+                gal1_shifted[fam][:len(s1)]["temp"] = s1["temp"] * self.massScale
             else:
                 pass
 
@@ -385,13 +503,13 @@ class GalCombine:
             print("Shifting family " + str(fam))
 
             gal2_shifted[fam][:len(s2)]["pos"] = s2["pos"].in_units(str(self.dKpcUnit.value) + " kpc") + [x2, y2, 0]
-            gal2_shifted[fam][:len(s2)]["vel"] = s2["vel"].in_units(str(self.velUnit.value) + " km s**-1") + [vx2, vy2, 0]
-            gal2_shifted[fam][:len(s2)]["mass"] = s2["mass"].in_units(str(self.dMsolUnit.value) + " Msol")
-            gal2_shifted[fam][:len(s2)]["rho"] = s2["rho"].in_units(str((self.dMsolUnit / (self.dKpcUnit**3)).value) + " Msol kpc**-3")
+            gal2_shifted[fam][:len(s2)]["vel"] = s2["vel"].in_units(str(self.velUnit.value * np.sqrt(self.massScale)) + " km s**-1") + [vx2, vy2, 0]
+            gal2_shifted[fam][:len(s2)]["mass"] = s2["mass"].in_units(str(self.dMsolUnit.value * self.massScale) + " Msol")
+            gal2_shifted[fam][:len(s2)]["rho"] = s2["rho"].in_units(str((self.dMsolUnit * self.massScale / (self.dKpcUnit**3)).value) + " Msol kpc**-3")
             gal2_shifted[fam][:len(s2)]["eps"] = s2["eps"].in_units("kpc")
 
             if str(fam) == 'g':
-                gal2_shifted[fam][:len(s2)]["temp"] = s2["temp"]
+                gal2_shifted[fam][:len(s2)]["temp"] = s2["temp"] * self.massScale
             else:
                 pass
 
@@ -411,6 +529,7 @@ class GalCombine:
                 combined[fam][:len(s1)][arname] = s1[arname]
                 combined[fam][len(s1):][arname] = s2[arname]
             if str(fam) == "gas":
+                # temp starts out uniform
                 combined[fam][:len(s1)]["temp"] = s1["temp"][:]
                 combined[fam][len(s1):]["temp"] = s1["temp"][:]
                 print(combined[fam]["temp"])
@@ -426,13 +545,20 @@ class GalCombine:
         return combined
 
     def _check_gas(self):
-        """Simply checks whether the simulation will include gas."""
+        """
+        Simply checks whether the simulation will include gas.
+
+        Returns
+        ----------
+        """
         if (np.sum(self.Gal1.g[:]['mass'])
            and np.sum(self.Gal1.g[:]['mass'])) != 0:
             self.use_gas = True
 
     def make_param_file(self):
-        """Creates a param file for use in ChaNGa."""
+        """
+        Creates a param file for use in ChaNGa.
+        """
         t = self.get_t_out()
         t_timeunits = t.to(self.timeUnit)
         t_steps = t_timeunits / self.dDelta
@@ -460,8 +586,10 @@ class GalCombine:
         file.close()
 
     def make_director_file(self):
-        """Creates director file for ChaNGa movie output.
-         Should set camera to keep entire system in view."""
+        """
+        Creates director file for ChaNGa movie output.
+        Should set camera to keep entire system in view.
+        """
         y = 0.5 * self.inital_separation.value + 20
 
         self._check_gas()
@@ -478,9 +606,9 @@ class GalCombine:
                  "softgas 0.25 \n",
                  "softgassph \n",
                  "logscale 100000000000 10000000000000000 \n",
-                 "colstar 1. 0.3 0. 8e-20 \n",
+                 "colstar 1. 0.3 0. 5e-19 \n",
                  "coldark 0.2 0.2 5 6e-18 \n",
-                 "colgas 168 54 50 5.75e-16 \n",
+                 "colgas 168 54 50 1e-14 \n",
                  "dDumpFrameStep = 25 \n",
                  "iDirector = 1 \n",
                  "FOV 90 \n",
@@ -510,7 +638,9 @@ class GalCombine:
         file.close()
 
     def make_info_file(self):
-        """Generates a log file for the run with info on galaxy composition."""
+        """
+        Generates a log file for the run with info on galaxy composition.
+        """
 
         self._check_gas()
 
@@ -533,15 +663,15 @@ class GalCombine:
         file = open(self.writename + ".info", "w")
         L = ["Writename = self.writename\n",
              "\n",
-             "Gal 1 total mass = " + str(IC_totmass_1) + " \n",
-             "Gal 1 dm mass = " + str(IC_mass_dm_1) + " \n",
-             "Gal 1 star mass = " + str(IC_mass_s_1) + " \n",
-             "Gal 1 gas mass = " + str(IC_mass_g_1) + " \n",
+             "Gal 1 total mass = " + str(self.massScale * IC_totmass_1) + " \n",
+             "Gal 1 dm mass = " + str(self.massScale * IC_mass_dm_1) + " \n",
+             "Gal 1 star mass = " + str(self.massScale * IC_mass_s_1) + " \n",
+             "Gal 1 gas mass = " + str(self.massScale * IC_mass_g_1) + " \n",
              "\n",
-             "Gal 2 total mass = " + str(IC_totmass_2) + " \n",
-             "Gal 2 dm mass = " + str(IC_mass_dm_2) + " \n",
-             "Gal 2 star mass = " + str(IC_mass_s_2) + " \n",
-             "Gal 2 gas mass = " + str(IC_mass_g_2) + " \n",
+             "Gal 2 total mass = " + str(self.massScale * IC_totmass_2) + " \n",
+             "Gal 2 dm mass = " + str(self.massScale * IC_mass_dm_2) + " \n",
+             "Gal 2 star mass = " + str(self.massScale * IC_mass_s_2) + " \n",
+             "Gal 2 gas mass = " + str(self.massScale * IC_mass_g_2) + " \n",
              "\n",
              "Mass unit = " + str(self.dMsolUnit) + " \n",
              "Length unit = " + str(self.dKpcUnit) + " \n",
