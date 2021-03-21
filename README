@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------
 Combining galaxy models to create an initial condition for a collision:
-Run "python Main.py" to produce initial condition of two galaxies in a Keplerian orbit.
+Run "python GalCollide.py" to produce initial condition of two galaxies in a Keplerian orbit.
 Place galaxy models in InitialConditions directory and specify file name in Parameters.py
 The output file name is specified along with orbital parameters in Parameters.py
 
