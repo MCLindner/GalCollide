@@ -15,39 +15,74 @@ import astropy.constants as const
 class GalCombine:
     """
     Create an initial condition for two galaxies in a Kepler orbit.
-    Attributes:
-    Gal1, PyNBody TipsySnap
-    Gal2, PyNbody TipsySnap
-    dDelta = dDelta for changa param file
-    d_perigalactic = perigalactic distance given in kpc
-    initial_separation = initial separation distance between galaxies in kpc
-    eccentricity = eccentricity of the system
-    time = time since (or until) first perigalacticon passage in Myr
-    writename = output file name (string)
-    W1, w1, i1 = Euler angles for galaxy 1
-    W2, w2, i2 = Euler angles for galaxy 2
-    transform = Bool, whether or not to transform each galaxy by Euler angles
 
-    Public methods:
-    eccentric_anomalies():
+    Attributes
+    ----------
+    Gal1 : PyNBody TipsySnap
+        Tipsy snapshot of first galaxy model
 
-    calculate_ICs():
+    Gal2 : PyNbody TipsySnap
+        Tipsy snapshot of second galaxy model
 
-    combine(): generates the initial condition tipsy file
+    dDelta : float/int
+        dDelta for changa param file
 
-    get_period(): gets the period of the orbit of the system
+    d_perigalactic : float/int
+        Perigalactic distance given in kpc
 
-    get_t_out():
+    initial_separation : float/int
+        Initial separation distance between galaxies in kpc
 
-    make_param_file(): creates the param file for changa
+    eccentricity : float/int
+        Eccentricity of the system
 
-    make_director_file(): creates the director file for changa movie output
+    time : float/int
+        Time since (or until if negative) first perigalacticon passage in Myr
 
-    solve_ivp(): tests that the initial condition is
-     correct by solving the two body problem.
+    writename : string
+        Output file name
 
+    W1, w1, i1 : float/int
+        Euler angles for galaxy 1
 
-     Should I just scale the final output or should I scale all of the IC vels
+    W2, w2, i2 : float/int
+        Euler angles for galaxy 2
+
+    transform : Boolean
+        Whether or not to transform each galaxy by Euler angles
+
+    Public methods
+    ----------
+    eccentric_anomalies() :
+
+    calculate_ICs() :
+        Calculates intial positions and velocies of galaxies to place them on a
+        Keplerian orbit as specified by perigalactic distance, initial
+        separation,eccentricity, the mass of the galaxies, and time since first
+        perigalactivon passage.
+
+    combine() :
+        Generates the initial condition tipsy file by combining galaxy
+        models with initial positions and velocites given by calculate_ICs()
+
+    get_period() :
+        Gets the period of the orbit of the system based upon orbital
+        parameters
+
+    get_t_out() :
+
+    make_param_file() :
+        Creates the param file for changa
+
+    make_director_file() :
+        Creates the director file for changa movie output
+
+    make_info_file() :
+
+    solve_ivp() :
+        Tests that the initial condition is
+        correct by solving the two body problem.
+
     """
 
     def __init__(self, Gal1, Gal2, dDelta,
@@ -237,7 +272,8 @@ class GalCombine:
 
     def _equations(self, t, p):
         """Splits second order diff eqquations of motion into four
-         first order differential equations."""
+         first order differential equations.
+        """
         r = np.sqrt((p[0])**2 + (p[1])**2)
 
         # Split the diff EQs
@@ -254,8 +290,10 @@ class GalCombine:
         return [du1, du2, du3, du4]
 
     def solve_ivp(self, which_gal):
-        """Test that the initial condition is correct by
-         solving the two-body problem for the system."""
+        """
+        Test that the initial condition is correct by solving
+         the two-body problem for the system.
+        """
         nsteps = 10000
         period = self.get_period().to(u.s).value
         t_eval = np.linspace(0, period, nsteps)
@@ -303,8 +341,9 @@ class GalCombine:
         return rmat
 
     def combine(self):
-        """Combines the two galaxies into a new TipsySnap.
-         Massunit = 2.2222858e5 Msol. Length unit = 1 kpc."""
+        """
+        Combines the two galaxies into a new TipsySnap.
+        """
         # these x y z refer to initial condit to be added
         print("Getting initial conditions")
         x1, y1, vx1, vy1 = self._initial_conds(which_gal=self.Gal1)
