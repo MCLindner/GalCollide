@@ -13,7 +13,7 @@ dDelta = .01
 d_perigalactic = 14.8
 
 # Initial separation distance in kpc
-initial_separation = 10**2
+initial_separation = 200
 
 # Eccentricity of system
 eccentricity = 0.99
@@ -21,8 +21,11 @@ eccentricity = 0.99
 # Time in Myr since first perigalacticon passage of desired output snapshot
 time = 175
 
+# Dynamical mass of the system in kg
+mDyn = 1.312687200755e+42
+
 # Output file name
-writename = "MiceGasHaloV4"
+writename = "MiceScaledMassV3"
 
 # Euler angles to transform each galaxy by
 W1, w1, i1 = 0, 4.10152, 0.261799

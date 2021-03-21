@@ -16,6 +16,7 @@ d_perigalactic = p.d_perigalactic
 initial_separation = p.initial_separation
 eccentricity = p.eccentricity
 time = p.time
+mDyn = p.mDyn
 writename = p.writename
 W1 = p.W1
 w1 = p.w1
@@ -33,7 +34,7 @@ else:
 
 two_bodys = GalCombine(Gal1, Gal2, dDelta,
                        d_perigalactic, initial_separation, eccentricity,
-                       time, writename, W1, w1, i1, W2, w2, i2,
+                       time, mDyn, writename, W1, w1, i1, W2, w2, i2,
                        transform)
 
 two_bodys.make_param_file()
@@ -59,6 +60,7 @@ ax[0].plot(test1['t'], y1)
 ax[1].plot(test2['t'], y2)
 ax[0].set_ylabel('y')
 ax[0].set_xlabel('t')
+plt.savefig("./Images/TwoBodyYt_img")
 
 fig, ax = plt.subplots(figsize=(15, 15))
 
@@ -69,4 +71,5 @@ ax.scatter(x1[0], y1[0], c='g')
 ax.scatter(x2[0], y2[0], c='g')
 ax.scatter(x1[1:50], y1[1:50], c='b')
 ax.scatter(x2[1:50], y2[1:50], c='r')
+plt.savefig("./Images/TwoBodyXY_img")
 plt.show()
