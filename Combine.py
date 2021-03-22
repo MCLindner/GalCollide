@@ -503,9 +503,9 @@ class GalCombine:
             print("Shifting family " + str(fam))
 
             gal2_shifted[fam][:len(s2)]["pos"] = s2["pos"].in_units(str(self.dKpcUnit.value) + " kpc") + [x2, y2, 0]
-            gal2_shifted[fam][:len(s2)]["vel"] = s2["vel"].in_units(str(self.velUnit.value * np.sqrt(self.massScale)) + " km s**-1") + [vx2, vy2, 0]
-            gal2_shifted[fam][:len(s2)]["mass"] = s2["mass"].in_units(str(self.dMsolUnit.value * self.massScale) + " Msol")
-            gal2_shifted[fam][:len(s2)]["rho"] = s2["rho"].in_units(str((self.dMsolUnit * self.massScale / (self.dKpcUnit**3)).value) + " Msol kpc**-3")
+            gal2_shifted[fam][:len(s2)]["vel"] = s2["vel"].in_units(str(self.velUnit.value) + " km s**-1") * np.sqrt(self.massScale) + [vx2, vy2, 0]
+            gal2_shifted[fam][:len(s2)]["mass"] = s2["mass"].in_units(str(self.dMsolUnit.value) + " Msol") * self.massScale
+            gal2_shifted[fam][:len(s2)]["rho"] = s2["rho"].in_units(str((self.dMsolUnit / (self.dKpcUnit**3)).value) + " Msol kpc**-3")  * self.massScale
             gal2_shifted[fam][:len(s2)]["eps"] = s2["eps"].in_units("kpc")
 
             if str(fam) == 'g':
