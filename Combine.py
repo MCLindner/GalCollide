@@ -463,9 +463,9 @@ class GalCombine:
             print("Shifting family " + str(fam))
             # in_units here IS needed to ensure units match when added to IC
             gal1_shifted[fam][:len(s1)]["pos"] = s1["pos"].in_units(str(self.dKpcUnit.value) + " kpc") + [x1, y1, 0]
-            gal1_shifted[fam][:len(s1)]["vel"] = s1["vel"].in_units(str(self.velUnit.value + " km s**-1") * np.sqrt(self.massScale)) + [vx1, vy1, 0]
+            gal1_shifted[fam][:len(s1)]["vel"] = s1["vel"].in_units(str(self.velUnit.value) + " km s**-1") * np.sqrt(self.massScale) + [vx1, vy1, 0]
             gal1_shifted[fam][:len(s1)]["mass"] = s1["mass"].in_units(str(self.dMsolUnit.value) + " Msol") * self.massScale
-            gal1_shifted[fam][:len(s1)]["rho"] = s1["rho"].in_units(str((self.dMsolUnit / (self.dKpcUnit**3)).value) * self.massScale + " Msol kpc**-3")
+            gal1_shifted[fam][:len(s1)]["rho"] = s1["rho"].in_units(str((self.dMsolUnit / (self.dKpcUnit**3)).value) + " Msol kpc**-3") * self.massScale
             gal1_shifted[fam][:len(s1)]["eps"] = s1["eps"].in_units("kpc")
 
             if str(fam) == 'gas':
@@ -503,9 +503,9 @@ class GalCombine:
             print("Shifting family " + str(fam))
 
             gal2_shifted[fam][:len(s2)]["pos"] = s2["pos"].in_units(str(self.dKpcUnit.value) + " kpc") + [x2, y2, 0]
-            gal2_shifted[fam][:len(s2)]["vel"] = s2["vel"].in_units(str(self.velUnit.value + " km s**-1") * np.sqrt(self.massScale)) + [vx2, vy2, 0]
+            gal2_shifted[fam][:len(s2)]["vel"] = s2["vel"].in_units(str(self.velUnit.value) + " km s**-1") * np.sqrt(self.massScale) + [vx2, vy2, 0]
             gal2_shifted[fam][:len(s2)]["mass"] = s2["mass"].in_units(str(self.dMsolUnit.value) + " Msol") * self.massScale
-            gal2_shifted[fam][:len(s2)]["rho"] = s2["rho"].in_units(str((self.dMsolUnit / (self.dKpcUnit**3)).value) * self.massScale + " Msol kpc**-3")
+            gal2_shifted[fam][:len(s2)]["rho"] = s2["rho"].in_units(str((self.dMsolUnit / (self.dKpcUnit**3)).value) + " Msol kpc**-3") * self.massScale
             gal2_shifted[fam][:len(s2)]["eps"] = s2["eps"].in_units("kpc")
 
             if str(fam) == 'g':
