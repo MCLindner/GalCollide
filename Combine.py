@@ -536,9 +536,9 @@ class GalCombine:
             else:
                 pass
 
-        combined.write(filename=self.writename,
-                       fmt=pynbody.tipsy.TipsySnap,
-                       cosmological=False)
+        # combined.write(filename=self.writename,
+        #                fmt=pynbody.tipsy.TipsySnap,
+        #                cosmological=False)
         print("Done")
         print("")
 

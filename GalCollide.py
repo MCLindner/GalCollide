@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 
-"""Main.py: Description."""
+"""GalCollide.py: Description."""
 
 __author__ = "Michael Lindner"
 
 import matplotlib.pylab as plt
 import astropy.units as u
+import pynbody
 import Parameters as p
 from Combine import GalCombine
+import ObservationFrame
 
 Gal1 = p.Gal1
 Gal2 = p.Gal2
@@ -27,7 +29,8 @@ i2 = p.i2
 transform = p.transform
 
 if (initial_separation < d_perigalactic):
-    print("Error: Initial separation must be greater than the perigalactic distance")
+    print("""Error: Initial separation must
+           be greater than the perigalactic distance""")
     exit()
 else:
     pass
@@ -72,4 +75,10 @@ ax.scatter(x2[0], y2[0], c='g')
 ax.scatter(x1[1:50], y1[1:50], c='b')
 ax.scatter(x2[1:50], y2[1:50], c='r')
 plt.savefig("./Images/TwoBodyXY_img")
+
+combined_obs = ObservationFrame.obsTransform(combined)
+combined_obs.write(filename=p.writename,
+                   fmt=pynbody.tipsy.TipsySnap,
+                   cosmological=False)
+
 plt.show()
