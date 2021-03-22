@@ -52,7 +52,6 @@ Mass1 = float(Gal1['mass'].sum().in_units('kg')) * u.kg
 Mass2 = float(Gal2['mass'].sum().in_units('kg')) * u.kg
 MassTot = Mass1 + Mass2
 
-
 x1 = (test1['y'][0] * u.m).to(u.kpc).value * Mass1 / MassTot
 x2 = (test2['y'][0] * u.m).to(u.kpc).value * Mass2 / MassTot
 y1 = (test1['y'][1] * u.m).to(u.kpc).value * Mass1 / MassTot
