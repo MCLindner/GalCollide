@@ -18,6 +18,8 @@ velUnit = 100 * u.km / u.s
 # Rotate from simulation coordinates to observation coordinates
 # R=LMr+Rc,V=VMv+Vc.
 
+# TODO: Check angles
+
 xrot = p.thetax
 yrot = p.thetay
 zrot = p.thetaz
@@ -43,6 +45,9 @@ zmat = np.matrix([[c_z,  s_z,  0.0],
                   [0.0,  0.0,  1.0]])
 
 tmp1 = np.matmul(xmat, ymat)
+# Possible mistake
+# MULM(tmp1, xmat, ymat);
+# MULM(rmat, zmat, tmp1);
 rmat = np.matmul(zmat, tmp1)
 
 

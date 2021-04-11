@@ -115,6 +115,7 @@ class GalCombine:
 
         # simulation units for param file
         # TODO: find a way to grab from GalactICs
+        # TODO: Default units, check for units.param
         self.dMsolUnit = 2.32503e9 * u.solMass
         self.dKpcUnit = 1 * u.kpc
         self.timeUnit = 9.7792e6 * u.yr
