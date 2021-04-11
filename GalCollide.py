@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 
-"""Main.py: Description."""
+"""GalCollide.py: Description."""
 
 __author__ = "Michael Lindner"
 
 import matplotlib.pylab as plt
 import astropy.units as u
+import pynbody
 import Parameters as p
 from Combine import GalCombine
+import ObservationFrame
 
 Gal1 = p.Gal1
 Gal2 = p.Gal2
@@ -25,9 +27,11 @@ W2 = p.W2
 w2 = p.w2
 i2 = p.i2
 transform = p.transform
+observation_frame = p.observation_frame
 
 if (initial_separation < d_perigalactic):
-    print("Error: Initial separation must be greater than the perigalactic distance")
+    print("""Error: Initial separation must
+           be greater than the perigalactic distance""")
     exit()
 else:
     pass
@@ -48,7 +52,6 @@ test2 = two_bodys.solve_ivp(Gal2)
 Mass1 = float(Gal1['mass'].sum().in_units('kg')) * u.kg
 Mass2 = float(Gal2['mass'].sum().in_units('kg')) * u.kg
 MassTot = Mass1 + Mass2
-
 
 x1 = (test1['y'][0] * u.m).to(u.kpc).value * Mass1 / MassTot
 x2 = (test2['y'][0] * u.m).to(u.kpc).value * Mass2 / MassTot
@@ -72,4 +75,14 @@ ax.scatter(x2[0], y2[0], c='g')
 ax.scatter(x1[1:50], y1[1:50], c='b')
 ax.scatter(x2[1:50], y2[1:50], c='r')
 plt.savefig("./Images/TwoBodyXY_img")
+
+if observation_frame is True:
+    write_file = ObservationFrame.obsTransform(combined)
+else:
+    write_file = combined
+
+write_file.write(filename=p.writename,
+                 fmt=pynbody.tipsy.TipsySnap,
+                 cosmological=False)
+
 plt.show()

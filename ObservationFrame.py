@@ -7,11 +7,18 @@ __author__ = "Michael Lindner"
 import pynbody
 import numpy as np
 import ObservationParameters as p
+import astropy.units as u
 
-snapshot = p.snapshot
+#snapshot = p.snapshot
+dMsolUnit = 2.32503e9 * u.solMass
+dKpcUnit = 1 * u.kpc
+timeUnit = 9.7792e6 * u.yr
+velUnit = 100 * u.km / u.s
 
 # Rotate from simulation coordinates to observation coordinates
 # R=LMr+Rc,V=VMv+Vc.
+
+# TODO: Check angles
 
 xrot = p.thetax
 yrot = p.thetay
@@ -38,6 +45,9 @@ zmat = np.matrix([[c_z,  s_z,  0.0],
                   [0.0,  0.0,  1.0]])
 
 tmp1 = np.matmul(xmat, ymat)
+# Possible mistake
+# MULM(tmp1, xmat, ymat);
+# MULM(rmat, zmat, tmp1);
 rmat = np.matmul(zmat, tmp1)
 
 
@@ -51,27 +61,31 @@ def transformV(row):
     return(row)
 
 
-lengths = {}
-for fam in snapshot.families():
-    lengths[fam.name] = len(snapshot[fam])
+def obsTransform(snapshot):
+    lengths = {}
+    for fam in snapshot.families():
+        lengths[fam.name] = len(snapshot[fam])
 
-scaled_snapshot = pynbody.new(**lengths)
+    scaled_snapshot = pynbody.new(**lengths)
 
-for fam in snapshot.families():
-    print("Scaling family " + str(fam))
-    snap_fam = snapshot[fam]
+    for fam in snapshot.families():
+        print("Scaling family " + str(fam))
+        snap_fam = snapshot[fam]
 
-    snap_fam['pos'] = np.apply_along_axis(transformP, 1, snap_fam['pos'])
-    snap_fam['vel'] = np.apply_along_axis(transformV, 1, snap_fam['vel'])
+        snap_fam['pos'] = np.apply_along_axis(transformP, 1, snap_fam['pos'])
+        snap_fam['vel'] = np.apply_along_axis(transformV, 1, snap_fam['vel'])
 
-    scaled_snapshot[fam][:len(snap_fam)]['pos'] = snap_fam['pos'].in_units('kpc')
-    scaled_snapshot[fam][:len(snap_fam)]['vel'] = snap_fam['vel'].in_units('100 km s**-1')
-    scaled_snapshot[fam][:len(snap_fam)]['mass'] = snap_fam['mass'].in_units('2.32503e9 Msol')
-    scaled_snapshot[fam][:len(snap_fam)]['rho'] = snap_fam['rho'].in_units('2.32503e9 Msol kpc**-3')
-    scaled_snapshot[fam][:len(snap_fam)]['eps'] = snap_fam['eps'].in_units('kpc')
+        scaled_snapshot[fam][:len(snap_fam)]['pos'] = snap_fam['pos'].in_units(str(dKpcUnit.value) + " kpc")
+        scaled_snapshot[fam][:len(snap_fam)]['vel'] = snap_fam['vel'].in_units(str(velUnit.value) + " km s**-1")
+        scaled_snapshot[fam][:len(snap_fam)]['mass'] = snap_fam['mass'].in_units(str(dMsolUnit.value) + " Msol")
+        scaled_snapshot[fam][:len(snap_fam)]['rho'] = snap_fam['rho'].in_units(str((dMsolUnit / (dKpcUnit**3)).value) + " Msol kpc**-3")
+        scaled_snapshot[fam][:len(snap_fam)]['eps'] = snap_fam['eps'].in_units('kpc')
 
-scaled_snapshot.s['tform'] = snapshot.s['tform']
-scaled_snapshot.s['metals'] = snapshot.s['metals']
-scaled_snapshot.properties['time'] = snapshot.properties['time']
+    if str(fam) == "gas":
+        # temp starts out uniform
+        scaled_snapshot[fam][:len(snap_fam)]["temp"] = snap_fam["temp"][:]
+        scaled_snapshot[fam][len(snap_fam):]["temp"] = snap_fam["temp"][:]
+    else:
+        pass
 
-scaled_snapshot.write(filename='scaled.tipsy', fmt=pynbody.tipsy.TipsySnap, cosmological=False)
+    return scaled_snapshot
