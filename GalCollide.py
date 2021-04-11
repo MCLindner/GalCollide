@@ -27,6 +27,7 @@ W2 = p.W2
 w2 = p.w2
 i2 = p.i2
 transform = p.transform
+observation_frame = p.observation_frame
 
 if (initial_separation < d_perigalactic):
     print("""Error: Initial separation must
@@ -75,9 +76,13 @@ ax.scatter(x1[1:50], y1[1:50], c='b')
 ax.scatter(x2[1:50], y2[1:50], c='r')
 plt.savefig("./Images/TwoBodyXY_img")
 
-combined_obs = ObservationFrame.obsTransform(combined)
-combined_obs.write(filename=p.writename,
-                   fmt=pynbody.tipsy.TipsySnap,
-                   cosmological=False)
+if observation_frame is True:
+    write_file = ObservationFrame.obsTransform(combined)
+else:
+    write_file = combined
+
+write_file.write(filename=p.writename,
+                 fmt=pynbody.tipsy.TipsySnap,
+                 cosmological=False)
 
 plt.show()
