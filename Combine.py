@@ -388,21 +388,29 @@ class GalCombine:
         s_b = np.sin(b)
         s_g = np.sin(g)
 
-        # just use pynbody
+        # just use pynbody?
+        # Az(Omega)
         amat = np.matrix([[c_a,  s_a,  0.0],
                           [-s_a, c_a,  0.0],
                           [0.0,  0.0,  1.0]])
 
+        # Ax(i)
         bmat = np.matrix([[1.0,  0.0,  0.0],
                           [0.0,  c_b,  s_b],
                           [0.0, -s_b,  c_b]])
 
+        # Az(w)
         gmat = np.matrix([[c_g,  s_g,  0.0],
                           [-s_g, c_g,  0.0],
                           [0.0,  0.0,  1.0]])
 
-        tmp1 = np.matmul(amat, bmat)
-        rmat = np.matmul(tmp1, gmat)
+        # P = AzT(Omega)AxT(i)AzT(w)
+
+        # order?
+        # tmp = AzT(Omega)AxT(i)
+        tmp1 = np.matmul(amat.transpose(), bmat.transpose())
+        # rmat = tmpAzt(w)
+        rmat = np.matmul(tmp1, gmat.transpose())
 
         return rmat
 
