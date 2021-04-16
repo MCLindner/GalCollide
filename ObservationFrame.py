@@ -9,16 +9,13 @@ import numpy as np
 import ObservationParameters as p
 import astropy.units as u
 
-#snapshot = p.snapshot
+# snapshot = p.snapshot
 dMsolUnit = 2.32503e9 * u.solMass
 dKpcUnit = 1 * u.kpc
 timeUnit = 9.7792e6 * u.yr
 velUnit = 100 * u.km / u.s
 
-# Rotate from simulation coordinates to observation coordinates
-# R=LMr+Rc,V=VMv+Vc.
-
-# TODO: Check angles
+# TODO: get rid of globals
 
 xrot = p.thetax
 yrot = p.thetay
@@ -45,9 +42,6 @@ zmat = np.matrix([[c_z,  s_z,  0.0],
                   [0.0,  0.0,  1.0]])
 
 tmp1 = np.matmul(xmat, ymat)
-# Possible mistake
-# MULM(tmp1, xmat, ymat);
-# MULM(rmat, zmat, tmp1);
 rmat = np.matmul(zmat, tmp1)
 
 
