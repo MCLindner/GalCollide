@@ -388,6 +388,7 @@ class GalCombine:
         s_b = np.sin(b)
         s_g = np.sin(g)
 
+        # just use pynbody
         amat = np.matrix([[c_a,  s_a,  0.0],
                           [-s_a, c_a,  0.0],
                           [0.0,  0.0,  1.0]])
@@ -487,12 +488,12 @@ class GalCombine:
             s2 = self.Gal2[fam]
             if self.transform is True:
                 print("Tranforming " + str(fam))
-                s1["pos"] = np.apply_along_axis(transform, 1, s1["pos"],
+                s2["pos"] = np.apply_along_axis(transform, 1, s2["pos"],
                                                 (self._rmat(a=self.W2,
                                                             b=self.i2,
                                                             g=self.w2)))
 
-                s1["vel"] = np.apply_along_axis(transform, 1, s1["vel"],
+                s2["vel"] = np.apply_along_axis(transform, 1, s2["vel"],
                                                 (self._rmat(a=self.W2,
                                                             b=self.i2,
                                                             g=self.w2)))
@@ -537,9 +538,6 @@ class GalCombine:
             else:
                 pass
 
-        # combined.write(filename=self.writename,
-        #                fmt=pynbody.tipsy.TipsySnap,
-        #                cosmological=False)
         print("Done")
         print("")
 
