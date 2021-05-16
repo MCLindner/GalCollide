@@ -286,11 +286,12 @@ class GalCombine:
         """
         E1, E2 = self.eccentric_anomalies()
         M1 = E1 - self.eccentricity * np.sin(E1)
-        # t - tau = time since first pericenter passage = t_now
-        # scaled mass here
+        # t - tau = time since/until first pericenter passage = t_now
         t_now = M1 / np.sqrt((self.G * self.Mass1_scaled) / self.semi_major_axis**3)
         print("tnow:" + str(t_now.to(u.Gyr)))
         print("")
+        # desired time - current time = run time
+        # if current time is negative it is additive
         t_since_passage_obs = (self.time).to(u.s)
         t_out = + t_since_passage_obs - (t_now).to(u.s)
 
@@ -628,7 +629,7 @@ class GalCombine:
                  "target 0 0 0 \n",
                  "physical \n",
                  "file " + str(self.writename) + " \n",
-                 "project perspective \n",
+                 "project ortho \n",
                  "softdark 0.2 \n",
                  "logscale 100000000000 10000000000000000 \n",
                  "colstar 1. 0.3 0. 5e-18 \n",
